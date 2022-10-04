@@ -1,0 +1,37 @@
+{
+  "$id": "https://opentelemetry.io/schemas/sdkconfig/sampler",
+  "title": "OpenTelemetry SDK View Entry Configuration",
+  "type": "object",
+  "required": ["selector", "view"],
+  "properties": {
+    "selector": {
+      "type": "object",
+      "properties": {
+        "instrument_name": { "type": "string" },
+        "instrument_type": { "type": "string" },
+        "meter_name": { "type": "string" },
+        "meter_version": { "type": "string" },
+        "meter_schema_url": { "type": "string" }
+      }
+    },
+    "view": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "aggregation": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string" },
+            "args": { "type": "object" }
+          }
+        },
+        "attribute_keys": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

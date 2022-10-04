@@ -1,0 +1,54 @@
+{
+  "$id": "https://opentelemetry.io/schemas/sdkconfig/sdk",
+  "title": "OpenTelemetry SDK Configuration",
+  "description": "A configuration specification for OpenTelemetry SDKs",
+  "type": "object",
+  "properties": {
+    "sdk": {
+      "type": "object",
+      "properties": {
+        "disabled": { "type": "boolean" },
+        "resource": { "$ref": "/schemas/sdkconfig/resource" },
+        "logging": { "$ref": "/schemas/sdkconfig/logging" },
+        "attribute_limits": { "$ref": "/schemas/sdkconfig/attribute_limits" },
+        "tracer_provider": {
+          "type": "object",
+          "properties": {
+            "span_processors": {
+              "type": "array",
+              "items": { "$ref": "/schemas/sdkconfig/span_processor" }
+            },
+            "sampler": { "$ref": "/schemas/sdkconfig/sampler" },
+            "span_limits": { "$ref": "/schemas/sdkconfig/span_limits" }
+          }
+        },
+        "meter_provider": {
+          "type": "object",
+          "properties": {
+            "metric_readers": {
+              "type": "array",
+              "items": { "$ref": "/schemas/sdkconfig/metric_reader" }
+            },
+            "views": {
+              "type": "array",
+              "items": { "$ref": "/schemas/sdkconfig/view_entry" }
+            }
+          }
+        },
+        "logger_provider": {
+          "type": "object",
+          "properties": {
+            "log_record_processors": {
+              "type": "array",
+              "items": { "$ref": "/schemas/sdkconfig/log_record_processor" }
+            }
+          }
+        },
+        "propagators": {
+          "type": "array",
+          "items": { "$ref": "/schemas/sdkconfig/propagator" }
+        }
+      }
+    }
+  }
+}

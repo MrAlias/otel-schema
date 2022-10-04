@@ -1,0 +1,77 @@
+{
+  "$id": "https://opentelemetry.io/schemas/sdkconfig/exporter",
+  "title": "OpenTelemetry Exporter Configuration",
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "name": { "type": "string" },
+    "args": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "name": { "const": "otlp" }
+        }
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "endpoint": { "type": "string" },
+              "insecure": { "type": "boolean" },
+              "certificate": { "type": "string" },
+              "client_key": { "type": "string" },
+              "client_certificate": { "type": "string" },
+              "headers": { "type": "object" },
+              "compression": { "type": "string" },
+              "timeout": { "type": "string" },
+              "protocol": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "name": { "const": "zipkin" }
+        }
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "endpoint": { "type": "string" },
+              "timeout": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "name": { "const": "jaeger" }
+        }
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "protocol": { "type": "string" },
+              "endpoint": { "type": "string" },
+              "timeout": { "type": "string" },
+              "user": { "type": "string" },
+              "agent_host": { "type": "string" },
+              "agent_port": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

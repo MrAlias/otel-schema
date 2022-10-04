@@ -1,0 +1,13 @@
+{
+  "$id": "https://opentelemetry.io/schemas/sdkconfig/span_limits",
+  "title": "OpenTelemetry SDK Span Limits Configuration",
+  "type": "object",
+  "properties": {
+    "attribute_count_limit": { "type": "integer" },
+    "attribute_value_length_limit": { "type": "integer" },
+    "attribute_count_per_event_limit": { "type": "integer" },
+    "attribute_count_per_link_limit": { "type": "integer" },
+    "event_count_limit": { "type": "integer" },
+    "link_count_limit": { "type": "integer" }
+  }
+}

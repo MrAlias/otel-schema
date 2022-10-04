@@ -1,0 +1,10 @@
+{
+  "$id": "https://opentelemetry.io/schemas/sdkconfig/log_record_processor",
+  "title": "OpenTelemetry SDK Propagator Configuration",
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "name": { "type": "string" },
+    "args": { "type": "args" }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "$id": "https://opentelemetry.io/schemas/sdkconfig/logging",
+  "title": "OpenTelemetry SDK Logging Configuration",
+  "type": "object",
+  "properties": {
+    "level": { "type": "string" }
+  }
+}
