@@ -1,0 +1,3 @@
+name: simple
+args:
+  exporter: str1
