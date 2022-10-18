@@ -25,6 +25,10 @@ repositories {
 
 dependencies {
   implementation("com.google.protobuf:protobuf-java:$protobufVersion")
+  implementation("org.yaml:snakeyaml:1.31")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.1")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.10.1")
+  implementation("com.google.protobuf:protobuf-java-util:3.21.5")
 
   testImplementation(platform("org.junit:junit-bom:5.9.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
@@ -58,5 +62,11 @@ tasks {
       showCauses = true
       showStackTraces = true
     }
+
+    systemProperties(
+      mapOf(
+        "REPO_DIR" to File(project.projectDir.parent).parent.toString()
+      )
+    )
   }
 }

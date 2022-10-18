@@ -15,7 +15,7 @@ class SdkSchemaTest {
     // Validate example kitchen-sink file in base of repository
     assertThat(
             validationExtension.validateFile(
-                new File(System.getProperty("REPO_DIR") + "/kitchen-sink.yaml")))
+                new File(System.getProperty("REPO_DIR") + "/json_schema/kitchen-sink.yaml")))
         .isEmpty();
   }
 

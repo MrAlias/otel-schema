@@ -1,0 +1,181 @@
+# This demonstrates a file configuration that falls out naturally from the SDK configuration options defined in the specification.
+# The configuration shown is a "kitchen sink" example, with all the available options shown for demonstration purposes.
+
+# User defined reusable elements
+shared:
+  # Define anchor for OTLP export args for reuse across signals
+  otlp_args: &otlpArgs
+    protocol: grpc
+    endpoint: https://my-remote-otlp-host.com:4317
+    headers:
+      api-key: 1234
+    compression: gzip
+
+# SDK configuration.
+sdk:
+  # Whether the SDK is enabled or not.
+  disabled: false
+  # The resource, shared across providers
+  resource:
+    # List of enabled resource detectors. Each detector has a name (FQCN for java), and an optional list of excluded keys. Detector name supports wildcard syntax. Detectors are invoked and merged sequentially. Static attributes and schema_url comprise a resource which is merged last.
+    detectors:
+      - name: com.domain.resources.CustomResourceProvider
+      - name: io.opentelemetry.sdk.extension.resources.*
+        excluded_attribute_keys:
+          # Exclude process.command_line, which is often verbose and may contain secrets
+          - process.command_line
+    # List of static resource attribute key / value pairs.
+    attributes:
+      service.name:
+        string_value: my-service
+      service.instance.id:
+        string_value: 1234
+    # The resource schema URL.
+    schema_url: http://schema.com
+  # Configure SDK logging.
+  logging:
+    level: info
+  # General attribute limits, applies to span and log attributes.
+  attribute_limits:
+    attribute_count_limit: 10
+    attribute_value_length_limit: 100
+  # Tracer provider configuration.
+  tracer_provider:
+    # List of span processors, to be added sequentially. Each span processor has a processor field defining the type, and args which are specific to the type.
+    span_processors:
+      # A simple processor.
+      - processor: SIMPLE
+        # Strongly typed arguments specific to simple processor.
+        simple_processor_args:
+          # Simple processor has an exporter field defining the exporter type, and args which are specific to the type.
+          exporter: EXTENSION_EXPORTER
+          # Arguments for an extension exporter, which is not explicitly defined in the spec.
+          extension_exporter_args:
+            name: foo-exporter
+            args:
+              key:
+                string_value: value
+      # A batch processor.
+      - processor: BATCH
+        # Strongly typed arguments specific to batch processor.
+        batch_processor_args:
+          # Batch processor has an exporter field defining the exporter type, and args which are specific to the type.
+          exporter: OTLP
+          # Strongly typed arguments for OTLP exporter. Reference to shared.otlp_args anchor defined earlier in file.
+          otlp_exporter_args: *otlpArgs
+          max_queue_size: 10
+      # An extension processor, which is not defined explicitly in the spec.
+      - processor: EXTENSION_PROCESSOR
+        # Arguments for an extension processor.
+        extension_processor_args:
+          name: my-processor
+          args:
+            key:
+              string_value: value
+    # The sampler type. Each sampler type has args specific to the type.
+    sampler: PARENT_BASED
+    # Strongly typed arguments specific to parent based sampler.
+    parent_based_sampler_args:
+      root_sampler: TRACE_ID_RATIO_BASED
+      trace_id_ratio_based_sampler_args:
+        ratio: .005
+      remote_parent_sampled: true
+    # The span limits.
+    span_limits:
+      # Merge general attribute limits with span specific limits.
+      attribute_count_limit: 20
+      attribute_value_length_limit: 200
+      # Span specific limits.
+      attribute_count_per_event_limit: 5
+      attribute_count_per_link_limit: 5
+      event_count_limit: 10
+      link_count_limit: 4
+  # Meter provider configuration.
+  meter_provider:
+    # List of metric readers. Each metric reader has a reader field defining the type, and args which are specific to the type.
+    metric_readers:
+      # A periodic reader.
+      - reader: PERIODIC
+        # Strongly typed arguments specific to periodic reader.
+        periodic_reader_args:
+          # Periodic reader has an exporter field defining the exporter type, and args which are specific to the type.
+          exporter: OTLP
+          # Strongly typed arguments for OTLP exporter. Reference to shared.otlp_args anchor defined earlier in file.
+          otlp_exporter_args: *otlpArgs
+          interval_millis: 100
+      # An extension reader, which is not defined explicitly in the spec.
+      - reader: EXTENSION_READER
+        # Arguments for extension reader.
+        extension_reader_args:
+          name: my-reader
+          args:
+            key:
+              string_value: value
+    # List of views. Each view consists of a selector defining criteria for which instruments are selected, and a view defining the resulting metric.
+    views:
+      # Add a "kitchen sink" view, using all selector fields, and using all configurable aspects of the view.
+      - selector:
+          # Select instruments with this name, including wildcard matching.
+          instrument_name: my-instrument
+          # Select instruments with this type.
+          instrument_type: COUNTER
+          # Select instruments with this meter name.
+          meter_name: my-meter
+          # Select instruments with this meter version.
+          meter_version: 1.0.0
+          # Select instruments with this meter schema url.
+          meter_schema_url: http://example.com
+        view:
+          # Change the metric name.
+          name: new-instrument-name
+          # Change the metric description.
+          description: new-description
+          # Change the aggregation type.
+          aggregation: EXPLICIT_BUCKET_HISTOGRAM
+          # Strongly typed arguments configuring the explicit bucket histogram aggregation.
+          explicit_bucket_histogram_aggregation_args:
+              bucket_boundaries: [1.0, 2.0, 5.0]
+          # List of attribute keys to retain. Keys included on measurements and not in this list will be ignored.
+          attribute_keys:
+            - foo
+            - bar
+      # Add a simpler view, which configures the drop aggregation for instruments whose name matches "*.server.duration".
+      - selector:
+          instrument_name: "*.server.duration"
+        view:
+          aggregation: DROP
+  logger_provider:
+    # List of log record processors, to be added sequentially. Each log record processor has a processor field defining the type, and args which are specific to the type.
+    log_record_processors:
+      # A simple processor.
+      - processor: SIMPLE
+        # Strongly typed arguments specific to simple processor.
+        simple_processor_args:
+          # Simple processor has an exporter field defining the exporter type, and args which are specific to the type.
+          exporter: EXTENSION_EXPORTER
+          # Arguments for an extension exporter, which is not explicitly defined in the spec.
+          extension_exporter_args:
+            name: foo-exporter
+            args:
+              key:
+                string_value: value
+      # A batch processor.
+      - processor: BATCH
+        # Strongly typed arguments specific to batch processor.
+        batch_processor_args:
+          # Batch processor has an exporter field defining the exporter type, and args which are specific to the type.
+          exporter: OTLP
+          # Strongly typed arguments for OTLP exporter. Reference to shared.otlp_args anchor defined earlier in file.
+          otlp_exporter_args: *otlpArgs
+          max_queue_size: 10
+      # An extension processor, which is not defined explicitly in the spec.
+      - processor: EXTENSION_PROCESSOR
+        # Arguments for an extension processor.
+        extension_processor_args:
+          name: my-processor
+          args:
+            key:
+              string_value: value
+  # List of context propagators. Each propagator has a propagator type. If a propagator has arguments, strongly typed arguments for that propagator can be specified.
+  propagators:
+    - propagator: TRACECONTEXT
