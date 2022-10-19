@@ -273,6 +273,23 @@ message MeterProvider {
         map<string, string> headers = 6;
         string compression = 7;
         string protocol = 8;
+
+        OtlpTemporalityPreference temporality_preference = 9;
+
+        enum OtlpTemporalityPreference {
+          UNSPECIFIED_TEMPORALITY_PREFERENCE = 0;
+          DELTA = 1;
+          CUMULATIVE = 2;
+        }
+
+        OtlpDefaultHistogramAggregation default_histogram_aggregation = 10;
+
+        enum OtlpDefaultHistogramAggregation {
+          UNSPECIFIED_DEFAULT_HISTOGRAM_AGGREGATION = 0;
+          EXPLICIT_BUCKET_HISTOGRAM = 1;
+          EXPONENTIAL_BUCKET_HISTOGRAM = 2;
+        }
+
       }
 
       message ExtensionMetricExporterArgs {

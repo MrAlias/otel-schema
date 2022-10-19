@@ -100,8 +100,12 @@ sdk:
         periodic_reader_args:
           # Periodic reader has an exporter field defining the exporter type, and args which are specific to the type.
           exporter: OTLP
-          # Strongly typed arguments for OTLP exporter. Reference to shared.otlp_args anchor defined earlier in file.
-          otlp_exporter_args: *otlpArgs
+          # Strongly typed arguments for OTLP exporter.
+          otlp_exporter_args:
+            # Reference to shared.otlp_args anchor defined earlier in file, but extended with otlp metric specific configuration.
+            <<: *otlpArgs
+            temporality_preference: DELTA
+            default_histogram_aggregation: EXPONENTIAL_BUCKET_HISTOGRAM
           interval_millis: 100
       # An extension reader, which is not defined explicitly in the spec.
       - reader: EXTENSION_READER

@@ -146,6 +146,10 @@ public class SdkConfigTest {
                                     .putHeaders("api-key", "1234")
                                     .setCompression("gzip")
                                     .setProtocol("grpc")
+                                    .setTemporalityPreference(
+                                        MeterProvider.MetricReader.PeriodicMetricReaderArgs.OtlpMetricExporterArgs.OtlpTemporalityPreference.DELTA)
+                                    .setDefaultHistogramAggregation(
+                                        MeterProvider.MetricReader.PeriodicMetricReaderArgs.OtlpMetricExporterArgs.OtlpDefaultHistogramAggregation.EXPONENTIAL_BUCKET_HISTOGRAM)
                                     .build())
                             .setIntervalMillis(100)
                             .build())
