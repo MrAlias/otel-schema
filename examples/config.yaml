@@ -30,7 +30,7 @@ resources:
     # The resource schema URL.
     schema_url: http://schema.com
 
-# General attribute limits, applies to span and log attributes.
+# Limits
 limits:
   attributes:
     value_length: 0 # OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT
@@ -84,16 +84,6 @@ sdk:
           name: traceidratio
           args:
             ratio: 0.01
-    # The span limits.
-    span_limits:
-      # Merge general attribute limits with span specific limits.
-      attribute_count_limit: 20
-      attribute_value_length_limit: 200
-      # Span specific limits.
-      attribute_count_per_event_limit: 5
-      attribute_count_per_link_limit: 5
-      event_count_limit: 10
-      link_count_limit: 4
   # Meter provider configuration.
   meter_provider:
     resource: resource/resourceA # references identifier from resources section
