@@ -154,9 +154,59 @@ sdk:
   propagators:
     - name: tracecontext
     - name: baggage
-# Undefined placeholder for instrumentation specific configuration. Need to define how instrumentation is configured in a language agnostic way.
+# Using examples provided in https://github.com/MrAlias/otel-schema/issues/8
 instrumentation:
+  java:
+    http:
+      capture_headers:
+        client:
+          request: # otel.instrumentation.http.capture-headers.client.request
+            enabled: true
+            headers:
+              - "User-Agent"
+          response: # otel.instrumentation.http.capture-headers.client.response
+            enabled: false
+        server:
+          request: # otel.instrumentation.http.capture-headers.server.request
+            enabled: false
+          response: # otel.instrumentation.http.capture-headers.server.response
+            enabled: true
+            headers:
+              - "Content-Type"
+  python:
+    falcon:
+      enabled: false # OTEL_PYTHON_DISABLED_INSTRUMENTATIONS
+      excluded_urls: # OTEL_PYTHON_FALCON_EXCLUDED_URLS
+        - http://falcon.com/healthcheck
+    fastapi:
+      excluded_urls: # OTEL_PYTHON_FASTAPI_EXCLUDED_URLS
+        - http://fastapi.com/healthcheck
+    django:
+      request_attributes: # OTEL_PYTHON_DJANGO_TRACED_REQUEST_ATTRS
+        - "content_type"
+        - "path_info"
 # language specific options
 python:
+  context: "contextvars" # OTEL_PYTHON_CONTEXT
+  id_generator:
+    name: "random" # OTEL_PYTHON_ID_GENERATOR
+    # possibly an id generator could require arguments
+  
+  # what would setting these mean for SDK
+  # configuration? would it be parsed by an alternate
+  # SDK?
+  tracer_provider: # OTEL_PYTHON_TRACER_PROVIDER
+  meter_provider: # OTEL_PYTHON_METER_PROVIDER
+  logger_provider: # OTEL_PYTHON_LOGGER_PROVIDER
+
+  logging_auto_instrumentation_enabled: false # OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+  
+  excluded_url: # OTEL_PYTHON_EXCLUDED_URLS
+    - http://excludeddomain.com/healthcheck
 java:
+  resource_providers: # otel.java.enabled.resource-providers
+    enabled:
+      - providerA
+    disabled:
+      - providerB
 ...
