@@ -7,11 +7,7 @@ package otel
 #SDK: {
 	disabled: bool | *true
 	resource: #Resource
-	tracer_providers: [...#TracerProvider]
-}
-
-#TracerProvider: {
-	span_processors: [#SpanProcessor]
+	span_processors: [...#SpanProcessor]
 }
 
 #Resource: {
