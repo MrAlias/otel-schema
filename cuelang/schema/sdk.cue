@@ -28,8 +28,8 @@ package otel
 			endpoint: string | *"http://localost:4318"
 		}
 
-		headers: #Headers
-		compression?: "gzip"
+		headers:        #Headers
+		compression?:   "gzip"
 		timeout_millis: int & >0 | *30000
 	}
 }
@@ -52,18 +52,18 @@ package otel
 }
 
 #SimpleSpanProcessor: {
-	type: "simple"
+	type:     "simple"
 	exporter: #Exporter
 }
 
 #BatchSpanProcessor: {
 	@description("OpenTelemetry SDK Batch Span Processor Configuration")
-	type: "batch"
-	exporter: #Exporter | *#OTLPExporter
-	max_queue_size: int & >0 | *2048
+	type:                   "batch"
+	exporter:               #Exporter | *#OTLPExporter
+	max_queue_size:         int & >0 | *2048
 	scheduled_delay_millis: int & >0 | *5000
-	export_timeout_millis: int & >0 | *30000
-	max_export_batch_size: int & >0 | *512
+	export_timeout_millis:  int & >0 | *30000
+	max_export_batch_size:  int & >0 | *512
 }
 
 #SpanProcessor: #SimpleSpanProcessor | #BatchSpanProcessor

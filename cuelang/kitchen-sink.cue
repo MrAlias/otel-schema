@@ -6,7 +6,7 @@
 		}
 	}
 	span_processors: [{
-		type: "batch"
+		type:     "batch"
 		exporter: #ExtensionExporter & {
 			type: "extension_exporter"
 		}
