@@ -1,2 +1,22 @@
 # include version specification in configuration files to help with parsing and schema evolution.
 version: 0.0.1
+sdk:
+  # Disable the SDK for all signals.
+  #
+  # Boolean value. If "true", a no-op SDK implementation will be used for all telemetry
+  # signals. Any other value or absence of the variable will have no effect and the SDK
+  # will remain enabled. This setting has no effect on propagators configured through
+  # the OTEL_PROPAGATORS variable.
+  #
+  # Environment variable: OTEL_SDK_DISABLED
+  disabled: false
+  # Configure resource attributes and resource detection for all signals.
+  resource:
+    # Key-value pairs to be used as resource attributes.
+    #
+    # Environment variable: OTEL_RESOURCE_ATTRIBUTES
+    attributes:
+      # Sets the value of the `service.name` resource attribute
+      #
+      # Environment variable: OTEL_SERVICE_NAME
+      service.name: !!str "unknown_service"
