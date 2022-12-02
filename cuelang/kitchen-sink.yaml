@@ -1,0 +1,8 @@
+disabled: true
+resource:
+  attributes:
+    key-1: value-1
+span_processors:
+- type: batch
+  exporter:
+    type: otlp
