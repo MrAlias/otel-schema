@@ -20,3 +20,47 @@ sdk:
       #
       # Environment variable: OTEL_SERVICE_NAME
       service.name: !!str "unknown_service"
+  # Configure the tracer provider.
+  tracer_provider:
+    # Span exporters. Each exporter key refers to the type of the exporters. Values configure the exporter. Exporters must be associated with a span processor.
+    exporters:
+      # Configure the zipkin exporter.
+      zipkin:
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_ZIPKIN_ENDPOINT
+        endpoint: http://localhost:9411/api/v2/spans
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_ZIPKIN_TIMEOUT
+        timeout: 10000
+      # TODO: OTLP exporter configuration.
+      # TODO: Jaeger exporter configuration.
+    # List of span processors. Each span processor has a name and args used to configure it.
+    span_processors:
+      # Add a batch span processor.
+      #
+      # Environment variable: OTEL_BSP_*, OTEL_TRACES_EXPORTER
+      - name: batch
+        # Configure the batch span processor.
+        args:
+          # Sets the delay interval between two consecutive exports.
+          #
+          # Environment variable: OTEL_BSP_SCHEDULE_DELAY
+          schedule_delay: 5000
+          # Sets the maximum allowed time to export data.
+          #
+          # Environment variable: OTEL_BSP_EXPORT_TIMEOUT
+          export_timeout: 30000
+          # Sets the maximum queue size.
+          #
+          # Environment variable: OTEL_BSP_MAX_QUEUE_SIZE
+          max_queue_size: 2048
+          # Sets the maximum batch size.
+          #
+          # Environment variable: OTEL_BSP_MAX_EXPORT_BATCH_SIZE
+          max_export_batch_size: 512
+          # Sets the exporter. Exporter must refer to a key in sdk.tracer_provider.exporters.
+          #
+          # Environment variable: OTEL_TRACES_EXPORTER
+          exporter: zipkin
