@@ -22,7 +22,7 @@ sdk:
       service.name: !!str "unknown_service"
   # Configure the tracer provider.
   tracer_provider:
-    # Span exporters. Each exporter key refers to the type of the exporters. Values configure the exporter. Exporters must be associated with a span processor.
+    # Span exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a span processor.
     exporters:
       # Configure the zipkin exporter.
       zipkin:
@@ -64,3 +64,70 @@ sdk:
           #
           # Environment variable: OTEL_TRACES_EXPORTER
           exporter: zipkin
+  # Configure the logger provider.
+  logger_provder:
+    # Log record exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a log record processor.
+    exporters:
+      # Configure the otlp exporter.
+      otlp:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
+        protocol: http/protobuf
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+        endpoint: http://localhost:4317/v1/logs
+        # Sets the certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
+        certificate: /app/cert.pem
+        # Sets the mTLS private client key.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY
+        client_key: /app/cert.pem
+        # Sets the mTLS client certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE
+        client_certificate: /app/cert.pem
+        # Sets the headers.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_LOGS_HEADERS
+        headers:
+          api-key: 1234
+        # Sets the compression.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_LOGS_COMPRESSION
+        compression: gzip
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
+        timeout: 10000
+    # List of log record processors. Each log record processor has a name and args used to configure it.
+    log_record_processors:
+      # Add a batch log record processor.
+      #
+      # Environment variable: OTEL_BLRP_*, OTEL_LOGS_EXPORTER
+      - name: batch
+        # Configure the batch log record processor.
+        args:
+          # Sets the delay interval between two consecutive exports.
+          #
+          # Environment variable: OTEL_BLRP_SCHEDULE_DELAY
+          schedule_delay: 5000
+          # Sets the maximum allowed time to export data.
+          #
+          # Environment variable: OTEL_BLRP_EXPORT_TIMEOUT
+          export_timeout: 30000
+          # Sets the maximum queue size.
+          #
+          # Environment variable: OTEL_BLRP_MAX_QUEUE_SIZE
+          max_queue_size: 2048
+          # Sets the maximum batch size.
+          #
+          # Environment variable: OTEL_BLRP_MAX_EXPORT_BATCH_SIZE
+          max_export_batch_size: 512
+          # Sets the exporter. Exporter must refer to a key in sdk.loger_provider.exporters.
+          #
+          # Environment variable: OTEL_LOGS_EXPORTER
+          exporter: otlp
