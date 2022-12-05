@@ -64,3 +64,61 @@ sdk:
           #
           # Environment variable: OTEL_TRACES_EXPORTER
           exporter: zipkin
+  # Configure the meter provider.
+  meter_provider:
+    # Metric exporters. Each exporter key refers to the type of the exporters. Values configure the exporter. Exporters must be associated with a metric reader.
+    exporters:
+      # Configure the otlp exporter.
+      otlp:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+        protocol: http/protobuf
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+        endpoint: http://localhost:4317/v1/metrics
+        # Sets the certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
+        certificate: /app/cert.pem
+        # Sets the mTLS private client key.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY
+        client_key: /app/cert.pem
+        # Sets the mTLS client certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE
+        client_certificate: /app/cert.pem
+        # Sets the headers.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_METRICS_HEADERS
+        headers:
+          api-key: 1234
+        # Sets the compression.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
+        compression: gzip
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
+        timeout: 10000
+    # List of metric readers. Each metric reader has a name and args used to configure it.
+    metric_readers:
+      # Add a periodic metric reader.
+      #
+      # Environment variable: OTEL_METRICS_EXPORT_*, OTEL_METRICS_EXPORTER
+      - name: periodic
+        args:
+          # Sets delay interval between the start of two consecutive export attempts.
+          #
+          # Environment variable: OTEL_METRIC_EXPORT_INTERVAL
+          interval: 5000
+          # Sets the maximum allowed time to export data.
+          #
+          # Environment variable: OTEL_METRIC_EXPORT_TIMEOUT
+          timeout: 30000
+          # Sets the exporter. Exporter must refer to a key in sdk.meter_provider.exporters.
+          #
+          # Environment variable: OTEL_METRICS_EXPORTER
+          exporter: otlp
