@@ -77,7 +77,7 @@ sdk:
         # Sets the endpoint.
         #
         # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-        endpoint: http://localhost:4317/v1/logs
+        endpoint: http://localhost:4318/v1/logs
         # Sets the certificate.
         #
         # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
