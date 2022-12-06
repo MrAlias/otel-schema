@@ -19,9 +19,18 @@ The environment variable interface suffers from the following identified limitat
 
 ## Explanation (TBD)
 
-Explain the proposed change as though it was already implemented and you were explaining it to a user. Depending on which layer the proposal addresses, the "user" may vary, or there may even be multiple.
+Using a configuration model or configuration file, users could configure all options currently available via environment variables.
 
-We encourage you to use examples, diagrams, or whatever else makes the most sense!
+### Goals
+
+* The configuration file must be language implementation agnostic. It must not contain structure or statements that only can be interpreted in a subset of languages. This does not preclude the possibility that the configuration file can have specific extensions included for a subset of languages, but it does mean that the standard format of the file must be interpretable by all implementation languages.
+* Broadly supported format. Ideally, the information encoded in the file can be decoded using native tools for all OpenTelemetry implementation languages. However, it must be possible for languages that do not natively support an encoding format to write their own parsers. This means that the file encoding format must be specified in a language agnostic form.
+* The file format must support structured data. At the minimum arrays and associative arrays.
+* The file format must support at least null, string, double precision floating point (IEEE 754-1985), or signed 64 bit integer value types.
+* Extensible. Custom span processors, exporters, samplers, or other user defined code can be configured using this format.
+* Configure SDK, but also configure instrumentation.
+* Versioning: needs to be able to version stability while evolving
+* (stretch) The file format can be validated client side.
 
 ## Internal details (TBD)
 
@@ -43,10 +52,31 @@ Note that mitigations do not need to be complete *solutions*, and that they do n
 
 What are some prior and/or alternative approaches? For instance, is there a corresponding feature in OpenTracing or OpenCensus? What are some ideas that you have rejected?
 
-## Open questions (TBD)
+## Open questions
 
-What are some questions that you know aren't resolved yet by the OTEP? These may be questions that could be answered through further discussion, implementation experiments, or anything else that the future may bring.
+### How to handle environment variable / file config overlap?
+How does file configuration interact with environment variable configuration when both are present? How does no-code configuration
+
+* Solution 1: Ignore environment configuration when file configuration is present. Log a warning to the user indicating that multiple configuration modes were detected, but use the file configuration as the source of truth. 
+* Solution 2: Superimpose environment configuration on top of file configuration when both are present. One problem with this is that environment variable configuration doesn’t map to file configuration in an intuitive way. For example, OTEL_TRACES_EXPORTER defines a list of span exporters to be paired with a batch span processor configured by the OTEL_BSP_* variables. What do we do if the file config already contains one or more processors with an exporter specified in OTEL_TRACES_EXPORTER? Essentially, do we merge or append the environment variable configuration?
+
+### How to handle no-code vs programmatic configuration?
+How should the SDK be configured when both no-code configuration (either environment variable or file config) and programmatic configuration are present? NOTE: this question exists today with only the environment variable interface available.
+
+* Solution 1: Make it clear that interpretation of the environment shouldn’t be built into components. Instead, SDKs should have a component that explicitly interprets the environment and returns a configured instance of the SDK. This is how the java SDK works today and it nicely separates concerns.
+
+### How to handle deprecation/breaking changes to the config?
+How will breaking changes to the configuration be handled? What will the migration look like for users? Can it be consistent across implementations?
+
+* Solution 1: Major scheme version should be bumped for any backward incompatible changes. Implementations must be aware of the current version they support.
 
 ## Future possibilities (TBD)
 
 What are some future changes that this proposal would enable?
+
+## Related Spec issues address
+
+* https://github.com/open-telemetry/opentelemetry-specification/issues/1773
+* https://github.com/open-telemetry/opentelemetry-specification/issues/2857
+* https://github.com/open-telemetry/opentelemetry-specification/issues/2746
+
