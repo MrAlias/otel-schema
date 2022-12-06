@@ -55,7 +55,7 @@ What are some prior and/or alternative approaches? For instance, is there a corr
 ## Open questions
 
 ### How to handle environment variable / file config overlap?
-How does file configuration interact with environment variable configuration when both are present? How does no-code configuration
+How does file configuration interact with environment variable configuration when both are present?
 
 * Solution 1: Ignore environment configuration when file configuration is present. Log a warning to the user indicating that multiple configuration modes were detected, but use the file configuration as the source of truth. 
 * Solution 2: Superimpose environment configuration on top of file configuration when both are present. One problem with this is that environment variable configuration doesn’t map to file configuration in an intuitive way. For example, OTEL_TRACES_EXPORTER defines a list of span exporters to be paired with a batch span processor configured by the OTEL_BSP_* variables. What do we do if the file config already contains one or more processors with an exporter specified in OTEL_TRACES_EXPORTER? Essentially, do we merge or append the environment variable configuration?
