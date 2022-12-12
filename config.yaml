@@ -24,6 +24,41 @@ sdk:
   tracer_provider:
     # Span exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a span processor.
     exporters:
+      # Configure the otlp exporter.
+      otlp:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+        protocol: http/protobuf
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+        endpoint: http://localhost:4318/v1/metrics
+        # Sets the certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
+        certificate: /app/cert.pem
+        # Sets the mTLS private client key.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY
+        client_key: /app/cert.pem
+        # Sets the mTLS client certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE
+        client_certificate: /app/cert.pem
+        # Sets the headers.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_TRACES_HEADERS
+        headers:
+          api-key: 1234
+        # Sets the compression.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
+        compression: gzip
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
+        timeout: 10000
       # Configure the zipkin exporter.
       zipkin:
         # Sets the endpoint.
@@ -34,8 +69,36 @@ sdk:
         #
         # Environment variable: OTEL_EXPORTER_ZIPKIN_TIMEOUT
         timeout: 10000
-      # TODO: OTLP exporter configuration.
-      # TODO: Jaeger exporter configuration.
+      # Configure the jaeger exporter.
+      jaeger:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_PROTOCOL
+        protocol: http/thrift.binary
+        # Sets the endpoint. Applicable when protocol is http/thrift.binary or grpc.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_ENDPOINT
+        endpoint: http://localhost:14268/api/traces
+        # Sets the max time to wait for each export. Applicable when protocol is http/thrift.binary or grpc.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_TIMEOUT
+        timeout: 10000
+        # Sets the username for HTTP basic authentication. Applicable when protocol is http/thrift.binary or grpc.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_USER
+        user: user
+        # Sets the password for HTTP basic authentication. Applicable when protocol is http/thrift.binary or grpc.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_PASSWORD
+        password: password
+        # Sets the hostname of th Jaeger agent. Applicable when protocol is udp/thrift.compact or udp/thrift.binary.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_AGENT_PORT
+        agent_host: localhost
+        # Sets the port of th Jaeger agent. Applicable when protocol is udp/thrift.compact or udp/thrift.binary.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_AGENT_HOST
+        agent_port: 6832
     # List of span processors. Each span processor has a name and args used to configure it.
     span_processors:
       # Add a batch span processor.
@@ -63,7 +126,15 @@ sdk:
           # Sets the exporter. Exporter must refer to a key in sdk.tracer_provider.exporters.
           #
           # Environment variable: OTEL_TRACES_EXPORTER
+          exporter: otlp
+      # Add a batch span processor configured with zipkin exporter. For full description of options see sdk.tracer_provider.span_processors[0].
+      - name: batch
+        args:
           exporter: zipkin
+      # Add a batch span processor configured with jaeger exporter. For full description of options see sdk.tracer_provider.span_processors[0].
+      - name: batch
+        args:
+          exporter: jaeger
   # Configure the meter provider.
   meter_provider:
     # Metric exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a metric reader.
