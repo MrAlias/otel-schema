@@ -20,6 +20,17 @@ sdk:
       #
       # Environment variable: OTEL_SERVICE_NAME
       service.name: !!str "unknown_service"
+  # Configure context propagators. Each propagator has a name and args used to configure it. None of the propagators here have configurable options so args is not demonstrated.
+  #
+  # Environment variable: OTEL_PROPAGATORS
+  propagators:
+    - name: tracecontext
+    - name: baggage
+    - name: b3
+    - name: b3multi
+    - name: b3multijaeger
+    - name: xray
+    - name: ottrace
   # Configure the tracer provider.
   tracer_provider:
     # Span exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a span processor.
