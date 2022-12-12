@@ -91,11 +91,11 @@ sdk:
         #
         # Environment variable: OTEL_EXPORTER_JAEGER_PASSWORD
         password: password
-        # Sets the hostname of th Jaeger agent. Applicable when protocol is udp/thrift.compact or udp/thrift.binary.
+        # Sets the hostname of the Jaeger agent. Applicable when protocol is udp/thrift.compact or udp/thrift.binary.
         #
         # Environment variable: OTEL_EXPORTER_JAEGER_AGENT_PORT
         agent_host: localhost
-        # Sets the port of th Jaeger agent. Applicable when protocol is udp/thrift.compact or udp/thrift.binary.
+        # Sets the port of the Jaeger agent. Applicable when protocol is udp/thrift.compact or udp/thrift.binary.
         #
         # Environment variable: OTEL_EXPORTER_JAEGER_AGENT_HOST
         agent_port: 6832
