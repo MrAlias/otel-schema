@@ -32,7 +32,253 @@ Using a configuration model or configuration file, users could configure all opt
 * Versioning: needs to be able to version stability while evolving
 * (stretch) The file format can be validated client side.
 
-## Internal details (TBD)
+## Internal details
+
+Each language implementation supporting OpenTelemetry *MUST* produce a model that is available for applications to leverage. This allows implementations that don't expect users to load configuration files to work as expected. The following demonstrates how Python and Go may initialize a configuration object:
+
+### Python example
+
+```python
+cfg = opentelemetry.Configuration({
+  "sdk": {
+    "propagators": ["tracecontext", "baggage", "b3multi"],
+    "tracer_provider": {
+      "exporters": {
+        "zipkin":{},
+        "otlp":{},
+      },
+    },
+  },
+})
+```
+
+### Go example
+
+```go
+cfg := otel.NewConfiguration(map[string]interface{
+    "sdk": map[string]interface{
+      "propagators": []string{"tracecontext", "baggage", "b3multi"},
+      "tracer_provider": map[string]interface{},
+    },
+  },
+)
+```
+
+The configuration model *MAY* also be configured via the use of a configuration file. The following demostrates the proposed configuration file format:
+
+```yaml
+# include version specification in configuration files to help with parsing and schema evolution.
+scheme_version: 0.1
+sdk:
+  # Disable the SDK for all signals.
+  #
+  # Boolean value. If "true", a no-op SDK implementation will be used for all telemetry
+  # signals. Any other value or absence of the variable will have no effect and the SDK
+  # will remain enabled. This setting has no effect on propagators configured through
+  # the OTEL_PROPAGATORS variable.
+  #
+  # Environment variable: OTEL_SDK_DISABLED
+  disabled: false
+  # Configure resource attributes and resource detection for all signals.
+  resource:
+    # Key-value pairs to be used as resource attributes.
+    #
+    # Environment variable: OTEL_RESOURCE_ATTRIBUTES
+    attributes:
+      # Sets the value of the `service.name` resource attribute
+      #
+      # Environment variable: OTEL_SERVICE_NAME
+      service.name: !!str "unknown_service"
+  # Configure context propagators. Each propagator has a name and args used to configure it. None of the propagators here have configurable options so args is not demonstrated.
+  #
+  # Environment variable: OTEL_PROPAGATORS
+  propagators:
+    - name: tracecontext
+    - name: baggage
+    - name: b3
+    - name: b3multi
+    - name: b3multijaeger
+    - name: xray
+    - name: ottrace
+  # Configure the tracer provider.
+  tracer_provider:
+    # Span exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a span processor.
+    exporters:
+      # Configure the zipkin exporter.
+      zipkin:
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_ZIPKIN_ENDPOINT
+        endpoint: http://localhost:9411/api/v2/spans
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_ZIPKIN_TIMEOUT
+        timeout: 10000
+      # TODO: OTLP exporter configuration.
+      # TODO: Jaeger exporter configuration.
+    # List of span processors. Each span processor has a name and args used to configure it.
+    span_processors:
+      # Add a batch span processor.
+      #
+      # Environment variable: OTEL_BSP_*, OTEL_TRACES_EXPORTER
+      - name: batch
+        # Configure the batch span processor.
+        args:
+          # Sets the delay interval between two consecutive exports.
+          #
+          # Environment variable: OTEL_BSP_SCHEDULE_DELAY
+          schedule_delay: 5000
+          # Sets the maximum allowed time to export data.
+          #
+          # Environment variable: OTEL_BSP_EXPORT_TIMEOUT
+          export_timeout: 30000
+          # Sets the maximum queue size.
+          #
+          # Environment variable: OTEL_BSP_MAX_QUEUE_SIZE
+          max_queue_size: 2048
+          # Sets the maximum batch size.
+          #
+          # Environment variable: OTEL_BSP_MAX_EXPORT_BATCH_SIZE
+          max_export_batch_size: 512
+          # Sets the exporter. Exporter must refer to a key in sdk.tracer_provider.exporters.
+          #
+          # Environment variable: OTEL_TRACES_EXPORTER
+          exporter: zipkin
+  # Configure the meter provider.
+  meter_provider:
+    # Metric exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a metric reader.
+    exporters:
+      # Configure the otlp exporter.
+      otlp:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+        protocol: http/protobuf
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+        endpoint: http://localhost:4318/v1/metrics
+        # Sets the certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
+        certificate: /app/cert.pem
+        # Sets the mTLS private client key.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY
+        client_key: /app/cert.pem
+        # Sets the mTLS client certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE
+        client_certificate: /app/cert.pem
+        # Sets the headers.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_METRICS_HEADERS
+        headers:
+          api-key: 1234
+        # Sets the compression.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
+        compression: gzip
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
+        timeout: 10000
+        # Sets the temporality preference.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+        temporality_preference: delta
+        # Sets the default histogram aggregation.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
+        default_histogram_aggregation: exponential_bucket_histogram
+    # List of metric readers. Each metric reader has a name and args used to configure it.
+    metric_readers:
+      # Add a periodic metric reader.
+      #
+      # Environment variable: OTEL_METRICS_EXPORT_*, OTEL_METRICS_EXPORTER
+      - name: periodic
+        args:
+          # Sets delay interval between the start of two consecutive export attempts.
+          #
+          # Environment variable: OTEL_METRIC_EXPORT_INTERVAL
+          interval: 5000
+          # Sets the maximum allowed time to export data.
+          #
+          # Environment variable: OTEL_METRIC_EXPORT_TIMEOUT
+          timeout: 30000
+          # Sets the exporter. Exporter must refer to a key in sdk.meter_provider.exporters.
+          #
+          # Environment variable: OTEL_METRICS_EXPORTER
+          exporter: otlp
+  # Configure the logger provider.
+  logger_provider:
+    # Log record exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a log record processor.
+    exporters:
+      # Configure the otlp exporter.
+      otlp:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
+        protocol: http/protobuf
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+        endpoint: http://localhost:4318/v1/logs
+        # Sets the certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
+        certificate: /app/cert.pem
+        # Sets the mTLS private client key.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY
+        client_key: /app/cert.pem
+        # Sets the mTLS client certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE
+        client_certificate: /app/cert.pem
+        # Sets the headers.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_LOGS_HEADERS
+        headers:
+          api-key: 1234
+        # Sets the compression.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_LOGS_COMPRESSION
+        compression: gzip
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
+        timeout: 10000
+    # List of log record processors. Each log record processor has a name and args used to configure it.
+    log_record_processors:
+      # Add a batch log record processor.
+      #
+      # Environment variable: OTEL_BLRP_*, OTEL_LOGS_EXPORTER
+      - name: batch
+        # Configure the batch log record processor.
+        args:
+          # Sets the delay interval between two consecutive exports.
+          #
+          # Environment variable: OTEL_BLRP_SCHEDULE_DELAY
+          schedule_delay: 5000
+          # Sets the maximum allowed time to export data.
+          #
+          # Environment variable: OTEL_BLRP_EXPORT_TIMEOUT
+          export_timeout: 30000
+          # Sets the maximum queue size.
+          #
+          # Environment variable: OTEL_BLRP_MAX_QUEUE_SIZE
+          max_queue_size: 2048
+          # Sets the maximum batch size.
+          #
+          # Environment variable: OTEL_BLRP_MAX_EXPORT_BATCH_SIZE
+          max_export_batch_size: 512
+          # Sets the exporter. Exporter must refer to a key in sdk.loger_provider.exporters.
+          #
+          # Environment variable: OTEL_LOGS_EXPORTER
+          exporter: otlp
+
+```
 
 From a technical perspective, how do you propose accomplishing the proposal? In particular, please explain:
 
