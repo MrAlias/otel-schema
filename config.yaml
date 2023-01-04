@@ -212,6 +212,19 @@ sdk:
           #
           # Environment variable: OTEL_METRICS_EXPORTER
           exporter: otlp
+      # Add a prometheus metric reader. Some languages SDKs may implement this as a metric exporter.
+      #
+      # Environment variable: OTEL_METRICS_EXPORTER=prometheus
+      - name: prometheus
+        args:
+          # Set the host used to serve metrics in the prometheus format.
+          #
+          # Environment variable: OTEL_EXPORTER_PROMETHEUS_HOST
+          host: localhost
+          # Set the port used to serve metrics in the prometheus format.
+          #
+          # Environment variable: OTEL_EXPORTER_PROMETHEUS_PORT
+          port: 9464
   # Configure the logger provider.
   logger_provider:
     # Log record exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a log record processor.
