@@ -34,31 +34,193 @@ Using a configuration model or configuration file, users could configure all opt
 
 ## Internal details
 
-Each language implementation supporting OpenTelemetry *MUST* produce a model that is available for applications to leverage. This allows implementations that don't expect users to load configuration files to work as expected. The following demonstrates how Python and Go may initialize a configuration object:
+Each language implementation supporting OpenTelemetry *MUST* produce a model that is available for applications to leverage. This allows implementations to provide a configuration interface without the expectation on users to load a configuration file. The following demonstrates how Python and Go may provide a configuration interface to accomplish this:
 
 ### Python example
 
 ```python
-cfg = opentelemetry.Configuration({
-  "sdk": {
-    "propagators": ["tracecontext", "baggage", "b3multi"],
-    "tracer_provider": {
-      "exporters": {
-        "zipkin":{},
-        "otlp":{},
-      },
-    },
-  },
-})
+opentelemetry.Configure(
+    {
+        "scheme_version": "0.0.1",
+        "sdk": {
+            "resource": {
+                "attributes": {
+                    "service.name": "unknown_service",
+                }
+            },
+            "propagators": ["tracecontext", "baggage", "b3multi"],
+            "tracer_provider": {
+                "exporters": {
+                    "zipkin": {
+                        "endpoint": "http://localhost:9411/api/v2/spans",
+                        "timeout": 10000,
+                    },
+                    "otlp": {},
+                },
+                "span_processors": [
+                    {
+                        "name": "batch",
+                        "args": {
+                            "schedule_delay": 5000,
+                            "export_timeout": 30000,
+                            "max_queue_size": 2048,
+                            "max_export_batch_size": 512,
+                            "exporter": "zipkin",
+                        },
+                    }
+                ],
+            },
+            "meter_provider": {
+                "exporters": {
+                    "otlp": {
+                        "protocol": "http/protobuf",
+                        "endpoint": "http://localhost:4318/v1/metrics",
+                        "certificate": "/app/cert.pem",
+                        "client_key": "/app/cert.pem",
+                        "client_certificate": "/app/cert.pem",
+                        "headers": {
+                            "api-key": "1234",
+                        },
+                        "compression": "gzip",
+                        "timeout": 10000,
+                        "temporality_preference": "delta",
+                        "default_histogram_aggregation": "exponential_bucket_histogram",
+                    }
+                },
+                "metric_readers": [
+                    {
+                        "name": "periodic",
+                        "args": {
+                            "interval": 5000,
+                            "timeout": 30000,
+                            "exporter": "otlp",
+                        },
+                    }
+                ],
+            },
+            "logger_provider": {
+                "exporters": {
+                    "otlp": {
+                        "protocol": "http/protobuf",
+                        "endpoint": "http://localhost:4318/v1/logs",
+                        "certificate": "/app/cert.pem",
+                        "client_key": "/app/cert.pem",
+                        "client_certificate": "/app/cert.pem",
+                        "headers": {
+                            "api-key": "1234",
+                        },
+                        "compression": "gzip",
+                        "timeout": 10000,
+                    },
+                },
+                "log_record_processors": [
+                    {
+                        "name": "batch",
+                        "args": {
+                            "schedule_delay": 5000,
+                            "export_timeout": 30000,
+                            "max_queue_size": 2048,
+                            "max_export_batch_size": 512,
+                            "exporter": "otlp",
+                        },
+                    },
+                ],
+            },
+        },
+    }
+)
 ```
 
 ### Go example
 
 ```go
-cfg := otel.NewConfiguration(map[string]interface{
-    "sdk": map[string]interface{
+type config map[string]interface{} // added for convenience
+
+otel.Configure(config{
+    "sdk": config{
+      "resource": config{
+        "attributes": config{
+          "service.name": "unknown_service",
+        },
+      },
       "propagators": []string{"tracecontext", "baggage", "b3multi"},
-      "tracer_provider": map[string]interface{},
+      "tracer_provider": config{
+        "exporters": config{
+          "zipkin": config{
+            "endpoint": "http://localhost:9411/api/v2/spans",
+            "timeout":  10000,
+          },
+          "otlp": config{},
+        },
+        "span_processors": []config{
+          {
+            "name": "batch",
+            "args": config{
+              "schedule_delay":        5000,
+              "export_timeout":        30000,
+              "max_queue_size":        2048,
+              "max_export_batch_size": 512,
+              "exporter":              "zipkin",
+            },
+          },
+        },
+      },
+      "meter_provider": config{
+        "exporters": config{
+          "otlp": config{
+            "protocol":           "http/protobuf",
+            "endpoint":           "http://localhost:4318/v1/metrics",
+            "certificate":        "/app/cert.pem",
+            "client_key":         "/app/cert.pem",
+            "client_certificate": "/app/cert.pem",
+            "headers": config{
+            	"api-key": "1234",
+            },
+            "compression":                   "gzip",
+            "timeout":                       10000,
+            "temporality_preference":        "delta",
+            "default_histogram_aggregation": "exponential_bucket_histogram",
+          },
+        },
+        "metric_readers": []config{
+          {
+            "name": "periodic",
+            "args": config{
+              "interval": 5000,
+              "timeout":  30000,
+              "exporter": "otlp",
+            },
+          },
+        },
+      },
+      "logger_provider": config{
+        "exporters": config{
+          "otlp": config{
+            "protocol":           "http/protobuf",
+            "endpoint":           "http://localhost:4318/v1/logs",
+            "certificate":        "/app/cert.pem",
+            "client_key":         "/app/cert.pem",
+            "client_certificate": "/app/cert.pem",
+            "headers": config{
+              "api-key": "1234",
+            },
+            "compression": "gzip",
+            "timeout":     10000,
+          },
+        },
+        "log_record_processors": []config{
+          {
+            "name": "batch",
+            "args": config{
+              "schedule_delay":        5000,
+              "export_timeout":        30000,
+              "max_queue_size":        2048,
+              "max_export_batch_size": 512,
+              "exporter":              "otlp",
+            },
+          },
+        },
+      },
     },
   },
 )
@@ -325,4 +487,5 @@ What are some future changes that this proposal would enable?
 * https://github.com/open-telemetry/opentelemetry-specification/issues/1773
 * https://github.com/open-telemetry/opentelemetry-specification/issues/2857
 * https://github.com/open-telemetry/opentelemetry-specification/issues/2746
+* https://github.com/open-telemetry/opentelemetry-specification/issues/2860
 
