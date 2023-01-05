@@ -261,6 +261,41 @@ sdk:
           #
           # Environment variable: OTEL_EXPORTER_PROMETHEUS_PORT
           port: 9464
+    # List of views. Each view has a selector which determines the instrument(s) it applies to, and a view which configures resulting metric(s).
+    views:
+      # Add a view. The selection criteria and view aim to demonstrate the configuration surface area and are not representative of what a user would be expected to do.
+      - selector:
+          # Select instrument(s) by name.
+          instrument_name: my-instrument
+          # Select instrument(s) by type.
+          instrument_type: histogram
+          # Select instrument(s) by meter name.
+          meter_name: my-meter
+          # Select instrument(s) by meter version.
+          meter_version: 1.0.0
+          # Select instrument(s) by meter schema URL.
+          meter_schema_url: https://opentelemetry.io/schemas/1.16.0
+        view:
+          # Set the name of resulting metric(s).
+          name: new_instrument_name
+          # Set the description of resulting metric(s).
+          description: new_description
+          # Set the aggregation of resulting metric(s). Aggregation has a name an args used to configure it.
+          aggregation:
+            # Set the aggregation name. Options include: default, drop, sum, last_value, explicit_bucket_histogram, exponential_bucket_histogram.
+            name: explicit_bucket_histogram
+            # Configure the aggregation.
+            args:
+              # Set the bucket boundaries. Applicable when aggregation is explicit_bucket_histogram.
+              boundaries: [1.0, 2.0, 5.0]
+              # Set whether min and max are recorded. Applicable when aggregation is explicit_bucket_histogram or exponential_bucket_histogram.
+              record_min_max: true
+              # Sets the max number of buckets in each of the positive and negative ranges. Applicable when aggregation is exponential_bucket_histogram.
+              max_size: 160
+          # Set the attribute keys to retain.
+          attribute_keys:
+            - key1
+            - key2
   # Configure the logger provider.
   logger_provider:
     # Log record exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a log record processor.
