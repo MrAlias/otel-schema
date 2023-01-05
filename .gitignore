@@ -21,3 +21,9 @@ build
 # IntelliJ IDEA
 .idea
 *.iml
+
+# VSCode
+.vscode/
+
+# Python virtual env
+.venv
