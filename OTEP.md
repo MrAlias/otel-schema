@@ -34,12 +34,70 @@ Using a configuration model or configuration file, users could configure all opt
 
 ## Internal details
 
-Each language implementation supporting OpenTelemetry *MUST* produce a model that is available for applications to leverage. This allows implementations to provide a configuration interface without the expectation on users to load a configuration file. The following demonstrates how Python and Go may provide a configuration interface to accomplish this:
+In order to provide a minimal API surface area, implementations *MUST* support the following methods.
 
-### Python example
+### LoadAndValidateConfigurationFromFile(filename, format)
+
+An API called `LoadAndValidateConfigurationFromFile` receives a string parameter indicating the file containing the configuration to be loaded. An optional format parameter may be provided to indicate the format that this configuration uses. The default value for this parameter is `yaml`. The method returns a `Configuration` model that has been validated. This API *MAY* return an error or raise an exception, whichever is idiomatic to the implementation for the following reasons:
+
+* file doesn't exist or is invalid
+* configuration loaded is invalid
+
+#### Python LoadAndValidateConfigurationFromFile example
 
 ```python
-opentelemetry.Configure(
+
+filename = "./config.yaml"
+
+try:
+  cfg = opentelemetry.LoadAndValidateConfigurationFromFile(filename)
+except Exception as e:
+  print(e)
+
+filename = "./config.ini"
+
+try:
+  cfg = opentelemetry.LoadAndValidateConfigurationFromFile(filename, format="ini")
+except Exception as e:
+  raise e
+
+```
+
+#### Go LoadAndValidateConfigurationFromFile example
+
+```go
+
+filename := "./config.yaml"
+cfg, err := otel.LoadAndValidateConfigurationFromFile(filename)
+if err != nil {
+  return err
+}
+
+filename := "./config.json"
+cfg, err := otel.LoadAndValidateConfigurationFromFile(filename, otelconfig.WithFormat("json"))
+if err != nil {
+  return err
+}
+
+```
+
+### Configuration model
+
+To allow SDKs and instrumentation libraries to load configuration without having to implement the parsing logic, a `Configuration` model *MUST* be provided by implementations. This object:
+
+* has already been parsed from a file or data structure
+* has been validated
+
+(TBD what methods should this configuration model make available for SDKs/instrumentations?)
+
+### Additional interface: LoadAndValidateConfiguration
+
+Each language implementation supporting OpenTelemetry *MAY* support parsing a data structure instead of a file to produce a model. This allows implementations to provide a configuration interface without the expectation on users to load a configuration file. The following demonstrates how Python and Go may provide a configuration interface to accomplish this:
+
+#### Python LoadAndValidateConfiguration example
+
+```python
+opentelemetry.LoadAndValidateConfiguration(
     {
         "scheme_version": "0.0.1",
         "sdk": {
@@ -131,12 +189,12 @@ opentelemetry.Configure(
 )
 ```
 
-### Go example
+### Go LoadAndValidateConfiguration example
 
 ```go
 type config map[string]interface{} // added for convenience
 
-otel.Configure(config{
+otel.LoadAndValidateConfiguration(config{
     "sdk": config{
       "resource": config{
         "attributes": config{
@@ -226,7 +284,7 @@ otel.Configure(config{
 )
 ```
 
-The configuration model *MAY* also be configured via the use of a configuration file. The following demostrates the proposed configuration file format:
+The configuration model *MAY* also be configured via the use of a configuration file. The following demonstrates the proposed configuration file format:
 
 ```yaml
 # include version specification in configuration files to help with parsing and schema evolution.
