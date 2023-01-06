@@ -34,7 +34,7 @@ Using a configuration model or configuration file, users could configure all opt
 
 ## Internal details
 
-Each language implementation supporting OpenTelemetry *MUST* produce a model that is available for applications to leverage. This allows implementations to provide a configuration interface without the expectation on users to load a configuration file. The following demonstrates how Python and Go may provide a configuration interface to accomplish this:
+Each language implementation supporting OpenTelemetry *MAY* produce a model that is available for applications to leverage. This allows implementations to provide a configuration interface without the expectation on users to load a configuration file. The following demonstrates how Python and Go may provide a configuration interface to accomplish this:
 
 ### Python example
 
