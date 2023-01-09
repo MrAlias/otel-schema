@@ -1,8 +1,182 @@
-disabled: true
-resource:
-  attributes:
-    key-1: value-1
-span_processors:
-- type: batch
-  exporter:
-    type: otlp
+# include version specification in configuration files to help with parsing and schema evolution.
+scheme_version: "0.1"
+sdk:
+  # Disable the SDK for all signals.
+  #
+  # Boolean value. If "true", a no-op SDK implementation will be used for all telemetry
+  # signals. Any other value or absence of the variable will have no effect and the SDK
+  # will remain enabled. This setting has no effect on propagators configured through
+  # the OTEL_PROPAGATORS variable.
+  #
+  # Environment variable: OTEL_SDK_DISABLED
+  disabled: false
+  # Configure resource attributes and resource detection for all signals.
+  resource:
+    # Key-value pairs to be used as resource attributes.
+    #
+    # Environment variable: OTEL_RESOURCE_ATTRIBUTES
+    attributes:
+      # Sets the value of the `service.name` resource attribute
+      #
+      # Environment variable: OTEL_SERVICE_NAME
+      service.name: !!str "unknown_service"
+  # Configure context propagators. Each propagator has a name and args used to configure it. None of the propagators here have configurable options so args is not demonstrated.
+  #
+  # Environment variable: OTEL_PROPAGATORS
+  propagators:
+    - name: tracecontext
+    - name: baggage
+    - name: b3
+    - name: b3multi
+    - name: jaeger
+    - name: xray
+    - name: ottrace
+  # Configure general attribute limits. See also sdk.tracer_provider.span_limits, sdk.logger_provider.log_record_limits.
+  attribute_limits:
+    # Set the max attribute value size.
+    #
+    # Environment variable: OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT
+    attribute_value_length_limit: 4096
+    # Set the max attribute count.
+    #
+    # Environment variable: OTEL_ATTRIBUTE_COUNT_LIMIT
+    attribute_count_limit: 128
+  # Configure the tracer provider.
+  tracer_provider:
+    # Span exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a span processor.
+    exporters:
+      # Configure the otlp exporter.
+      otlp:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+        protocol: http/protobuf
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+        endpoint: http://localhost:4318/v1/metrics
+        # Sets the certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
+        certificate: /app/cert.pem
+        # Sets the mTLS private client key.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY
+        client_key: /app/cert.pem
+        # Sets the mTLS client certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE
+        client_certificate: /app/cert.pem
+        # Sets the headers.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_TRACES_HEADERS
+        headers:
+          api-key: 1234
+        # Sets the compression.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
+        compression: gzip
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
+        timeout: 10000
+    # List of span processors. Each span processor has a name and args used to configure it.
+    span_processors:
+      # Add a batch span processor.
+      #
+      # Environment variable: OTEL_BSP_*, OTEL_TRACES_EXPORTER
+      - name: batch
+        # Configure the batch span processor.
+        args:
+          # Sets the delay interval between two consecutive exports.
+          #
+          # Environment variable: OTEL_BSP_SCHEDULE_DELAY
+          schedule_delay: 5000
+          # Sets the maximum allowed time to export data.
+          #
+          # Environment variable: OTEL_BSP_EXPORT_TIMEOUT
+          export_timeout: 30000
+          # Sets the maximum queue size.
+          #
+          # Environment variable: OTEL_BSP_MAX_QUEUE_SIZE
+          max_queue_size: 2048
+          # Sets the maximum batch size.
+          #
+          # Environment variable: OTEL_BSP_MAX_EXPORT_BATCH_SIZE
+          max_export_batch_size: 512
+          # Sets the exporter. Exporter must refer to a key in sdk.tracer_provider.exporters.
+          #
+          # Environment variable: OTEL_TRACES_EXPORTER
+          exporter: otlp
+      # Add a batch span processor configured with zipkin exporter. For full description of options see sdk.tracer_provider.span_processors[0].
+      - name: batch
+        args:
+          exporter: zipkin
+      # Add a batch span processor configured with jaeger exporter. For full description of options see sdk.tracer_provider.span_processors[0].
+      - name: batch
+        args:
+          exporter: jaeger
+    # Configure the span limits. See also sdk.attribute_limits.
+    span_limits:
+      # Set the max span attribute value size. Overrides sdk.attribute_limits.attribute_value_length_limit.
+      #
+      # Environment variable: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT
+      attribute_value_length_limit: 4096
+      # Set the max span attribute count. Overrides sdk.attribute_limits.attribute_count_limit.
+      #
+      # Environment variable: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
+      attribute_count_limit: 128
+      # Set the max span event count.
+      #
+      # Environment variable: OTEL_SPAN_EVENT_COUNT_LIMIT
+      event_count_limit: 128
+      # Set the max span link count.
+      #
+      # Environment variable: OTEL_SPAN_LINK_COUNT_LIMIT
+      link_count_limit: 128
+      # Set the max attributes per span event.
+      #
+      # Environment variable: OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT
+      event_attribute_count_limit: 128
+      # Set the max attributes per span link.
+      #
+      # Environment variable: OTEL_LINK_ATTRIBUTE_COUNT_LIMIT
+      link_attribute_count_limit: 128
+    # Configuration for samplers. Each key refers to the type of sampler. Values configure the sampler. One key must be referenced in sdk.tracer_provider.sampler.
+    sampler_config:
+      # Configure the always_on sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=always_on
+      always_on:
+      # Configure the always_off sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=always_off
+      always_off:
+      # Configure the trace_id_ratio_based sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=traceidratio
+      trace_id_ratio_based:
+        # Set the sampling ratio.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=traceidratio, OTEL_TRACES_SAMPLER_ARG=0.0001
+        ratio: 0.0001
+      # Configure the parent_based sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=parentbased_*
+      parent_based:
+        # Set root sampler. Must refer a key in sdk.tracer_provider.sampler_config.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=parentbased_*
+        root: trace_id_ratio_based
+        # Set the sampler used when the parent is remote and is sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        remote_parent_sampled: always_on
+        # Set the sampler used when the parent is remote and is not sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        remote_parent_not_sampled: always_off
+        # Set the sampler used when the parent is local and is sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        local_parent_sampled: always_on
+        # Set the sampler used when the parent is local and is not sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        local_parent_not_sampled: always_off
+
+    # Set the sampler. Sampler must refer to a key in sdk.tracer_provider.sampler_config.
+    sampler: parent_based
+  # Configure the meter provider.
