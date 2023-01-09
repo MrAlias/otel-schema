@@ -81,6 +81,12 @@ if err != nil {
 
 ```
 
+Implementations *MUST* allow users to specify an environment variable to set the configuration file. This gives flexibility to end users of implementations that do not support command line arguments. Some possible names for this variable:
+
+* `OTEL_CONFIGURATION_FILE`
+* `OTEL_CONFIG_FILE`
+* `OTEL_CONF`
+
 ### Configuration model
 
 To allow SDKs and instrumentation libraries to load configuration without having to implement the parsing logic, a `Configuration` model *MUST* be provided by implementations. This object:
@@ -521,24 +527,55 @@ What are some prior and/or alternative approaches? For instance, is there a corr
 ## Open questions
 
 ### How to handle environment variable / file config overlap?
+
 How does file configuration interact with environment variable configuration when both are present?
 
 * Solution 1: Ignore environment configuration when file configuration is present. Log a warning to the user indicating that multiple configuration modes were detected, but use the file configuration as the source of truth. 
 * Solution 2: Superimpose environment configuration on top of file configuration when both are present. One problem with this is that environment variable configuration doesn’t map to file configuration in an intuitive way. For example, OTEL_TRACES_EXPORTER defines a list of span exporters to be paired with a batch span processor configured by the OTEL_BSP_* variables. What do we do if the file config already contains one or more processors with an exporter specified in OTEL_TRACES_EXPORTER? Essentially, do we merge or append the environment variable configuration?
 
 ### How to handle no-code vs programmatic configuration?
+
 How should the SDK be configured when both no-code configuration (either environment variable or file config) and programmatic configuration are present? NOTE: this question exists today with only the environment variable interface available.
 
 * Solution 1: Make it clear that interpretation of the environment shouldn’t be built into components. Instead, SDKs should have a component that explicitly interprets the environment and returns a configured instance of the SDK. This is how the java SDK works today and it nicely separates concerns.
 
 ### How to handle deprecation/breaking changes to the config?
+
 How will breaking changes to the configuration be handled? What will the migration look like for users? Can it be consistent across implementations?
 
 * Solution 1: Major scheme version should be bumped for any backward incompatible changes. Implementations must be aware of the current version they support.
 
-## Future possibilities (TBD)
+## Future possibilities
 
-What are some future changes that this proposal would enable?
+### Additional configuration providers
+
+Although the initial proposal for configuration supports only describes in-code and file representations, it's possible additional sources (remote, opamp, ...) for configuration will be desirable. The implementation of the configuration model and components should be extensible to allow for this.
+
+### Integration with auto-instrumentation
+
+The configuration model could be integrated to work with the existing auto-instrumentation tooling in each language implementation.
+
+#### Java
+
+The Java implementation provides a JAR that supports configuring various parameters via system properties. This implementation could leverage a configuration file by supporting its configuration a system property:
+
+```bash
+java -javaagent:path/to/opentelemetry-javaagent.jar \
+     -Dotel.config=./config.yaml
+     -jar myapp.jar
+```
+
+#### Python
+
+The Python implementation has a command available that allows users to leverage auto-instrumentation. The `opentelemetry-instrument` command could use a `--config` flag to pass in a config file:
+
+```bash
+# install the instrumentation package
+pip install opentelemetry-instrumentation
+# use a --config parameter to pass in the configuration file
+# NOTE: this parameter does not currently exist and would need to be added
+opentelemetry-instrument --config ./config.yaml ./python/app.py
+```
 
 ## Related Spec issues address
 
