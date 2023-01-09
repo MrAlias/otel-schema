@@ -182,6 +182,58 @@ sdk:
       #
       # Environment variable: OTEL_LINK_ATTRIBUTE_COUNT_LIMIT
       link_attribute_count_limit: 128
+    # Configuration for samplers. Each key refers to the type of sampler. Values configure the sampler. One key must be referenced in sdk.tracer_provider.sampler.
+    sampler_config:
+      # Configure the always_on sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=always_on
+      always_on:
+      # Configure the always_off sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=always_off
+      always_off:
+      # Configure the trace_id_ratio_based sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=traceidratio
+      trace_id_ratio_based:
+        # Set the sampling ratio.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=traceidratio, OTEL_TRACES_SAMPLER_ARG=0.0001
+        ratio: 0.0001
+      # Configure the parent_based sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=parentbased_*
+      parent_based:
+        # Set root sampler. Must refer a key in sdk.tracer_provider.sampler_config.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=parentbased_*
+        root: trace_id_ratio_based
+        # Set the sampler used when the parent is remote and is sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        remote_parent_sampled: always_on
+        # Set the sampler used when the parent is remote and is not sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        remote_parent_not_sampled: always_off
+        # Set the sampler used when the parent is local and is sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        local_parent_sampled: always_on
+        # Set the sampler used when the parent is local and is not sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        local_parent_not_sampled: always_off
+      # Configure the jaeger_remote sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=jaeger_remote
+      jaeger_remote:
+        # Set the endpoint.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=jaeger_remote, OTEL_TRACES_SAMPLER_ARG=endpoint=http://localhost:14250
+        endpoint: http://localhost:14250
+        # Set the polling interval.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=jaeger_remote, OTEL_TRACES_SAMPLER_ARG=pollingINtervalMs=5000
+        polling_interval: 5000
+        # Set the initial sampling rate.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=jaeger_remote, OTEL_TRACES_SAMPLER_ARG=initialSamplingRate=0.25
+        initial_sampling_rate: 0.25
+    # Set the sampler. Sampler must refer to a key in sdk.tracer_provider.sampler_config.
+    sampler: parent_based
   # Configure the meter provider.
   meter_provider:
     # Metric exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a metric reader.
