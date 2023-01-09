@@ -36,9 +36,9 @@ Using a configuration model or configuration file, users could configure all opt
 
 In order to provide a minimal API surface area, implementations *MUST* support the following methods.
 
-### LoadAndValidateConfigurationFromFile(filename, format)
+### LoadAndValidateConfigurationFromFile(filepath, format)
 
-An API called `LoadAndValidateConfigurationFromFile` receives a string parameter indicating the file containing the configuration to be loaded. An optional format parameter may be provided to indicate the format that this configuration uses. The default value for this parameter is `yaml`. The method returns a `Configuration` model that has been validated. This API *MAY* return an error or raise an exception, whichever is idiomatic to the implementation for the following reasons:
+An API called `LoadAndValidateConfigurationFromFile` receives a string parameter indicating the file path containing the configuration to be loaded. An optional format parameter may be provided to indicate the format that this configuration uses. The default value for this parameter is `yaml`. The method returns a `Configuration` model that has been validated. This API *MAY* return an error or raise an exception, whichever is idiomatic to the implementation for the following reasons:
 
 * file doesn't exist or is invalid
 * configuration loaded is invalid
