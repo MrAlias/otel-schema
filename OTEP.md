@@ -36,45 +36,45 @@ Using a configuration model or configuration file, users could configure all opt
 
 In order to provide a minimal API surface area, implementations *MUST* support the following methods.
 
-### LoadAndValidateConfigurationFromFile(filepath, format)
+### ParseAndValidateConfigurationFromFile(filepath, format)
 
-An API called `LoadAndValidateConfigurationFromFile` receives a string parameter indicating the file path containing the configuration to be loaded. An optional format parameter may be provided to indicate the format that this configuration uses. The default value for this parameter is `yaml`. The method returns a `Configuration` model that has been validated. This API *MAY* return an error or raise an exception, whichever is idiomatic to the implementation for the following reasons:
+An API called `ParseAndValidateConfigurationFromFile` receives a string parameter indicating the file path containing the configuration to be parsed. An optional format parameter may be provided to indicate the format that this configuration uses. The default value for this parameter is `yaml`. The method returns a `Configuration` model that has been validated. This API *MAY* return an error or raise an exception, whichever is idiomatic to the implementation for the following reasons:
 
 * file doesn't exist or is invalid
-* configuration loaded is invalid
+* configuration parsed is invalid
 
-#### Python LoadAndValidateConfigurationFromFile example
+#### Python ParseAndValidateConfigurationFromFile example
 
 ```python
 
 filename = "./config.yaml"
 
 try:
-  cfg = opentelemetry.LoadAndValidateConfigurationFromFile(filename)
+  cfg = opentelemetry.ParseAndValidateConfigurationFromFile(filename)
 except Exception as e:
   print(e)
 
 filename = "./config.ini"
 
 try:
-  cfg = opentelemetry.LoadAndValidateConfigurationFromFile(filename, format="ini")
+  cfg = opentelemetry.ParseAndValidateConfigurationFromFile(filename, format="ini")
 except Exception as e:
   raise e
 
 ```
 
-#### Go LoadAndValidateConfigurationFromFile example
+#### Go ParseAndValidateConfigurationFromFile example
 
 ```go
 
 filename := "./config.yaml"
-cfg, err := otel.LoadAndValidateConfigurationFromFile(filename)
+cfg, err := otel.ParseAndValidateConfigurationFromFile(filename)
 if err != nil {
   return err
 }
 
 filename := "./config.json"
-cfg, err := otel.LoadAndValidateConfigurationFromFile(filename, otelconfig.WithFormat("json"))
+cfg, err := otel.ParseAndValidateConfigurationFromFile(filename, otelconfig.WithFormat("json"))
 if err != nil {
   return err
 }
@@ -89,21 +89,21 @@ Implementations *MUST* allow users to specify an environment variable to set the
 
 ### Configuration model
 
-To allow SDKs and instrumentation libraries to load configuration without having to implement the parsing logic, a `Configuration` model *MUST* be provided by implementations. This object:
+To allow SDKs and instrumentation libraries to parse configuration without having to implement the parsing logic, a `Configuration` model *MUST* be provided by implementations. This object:
 
 * has already been parsed from a file or data structure
 * has been validated
 
 (TBD what methods should this configuration model make available for SDKs/instrumentations?)
 
-### Additional interface: LoadAndValidateConfiguration
+### Additional interface: ParseAndValidateConfiguration
 
-Each language implementation supporting OpenTelemetry *MAY* support parsing a data structure instead of a file to produce a model. This allows implementations to provide a configuration interface without the expectation on users to load a configuration file. The following demonstrates how Python and Go may provide a configuration interface to accomplish this:
+Each language implementation supporting OpenTelemetry *MAY* support parsing a data structure instead of a file to produce a model. This allows implementations to provide a configuration interface without the expectation on users to parse a configuration file. The following demonstrates how Python and Go may provide a configuration interface to accomplish this:
 
-#### Python LoadAndValidateConfiguration example
+#### Python ParseAndValidateConfiguration example
 
 ```python
-opentelemetry.LoadAndValidateConfiguration(
+opentelemetry.ParseAndValidateConfiguration(
     {
         "scheme_version": "0.0.1",
         "sdk": {
@@ -195,12 +195,12 @@ opentelemetry.LoadAndValidateConfiguration(
 )
 ```
 
-### Go LoadAndValidateConfiguration example
+### Go ParseAndValidateConfiguration example
 
 ```go
 type config map[string]interface{} // added for convenience
 
-otel.LoadAndValidateConfiguration(config{
+otel.ParseAndValidateConfiguration(config{
     "sdk": config{
       "resource": config{
         "attributes": config{
