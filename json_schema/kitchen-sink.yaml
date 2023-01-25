@@ -1,160 +1,427 @@
-# This demonstrates a file configuration that falls out naturally from the SDK configuration options defined in the specification.
-# The configuration shown is a "kitchen sink" example, with all the available options shown for demonstration purposes.
-
-# User defined reusable elements
-shared:
-  # Define anchor for OTLP export args for reuse across signals
-  otlp_args: &otlpArgs
-    protocol: grpc
-    endpoint: http://localost:4317
-    headers:
-      # TODO: Replace with environment variable when parsing to avoid storing secret in plain text
-      api-key: 1234
-    compression: gzip
-    timeout_millis: 30_000
-
-# SDK configuration.
+# include version specification in configuration files to help with parsing and schema evolution.
+scheme_version: 0.1
 sdk:
-  # Whether the SDK is enabled or not.
+  # Disable the SDK for all signals.
+  #
+  # Boolean value. If "true", a no-op SDK implementation will be used for all telemetry
+  # signals. Any other value or absence of the variable will have no effect and the SDK
+  # will remain enabled. This setting has no effect on propagators configured through
+  # the OTEL_PROPAGATORS variable.
+  #
+  # Environment variable: OTEL_SDK_DISABLED
   disabled: false
-  # The resource, shared across providers
+  # Configure resource attributes and resource detection for all signals.
   resource:
-    # List of enabled resource detectors. Each detector has a name (FQCN for java), and an optional list of excluded keys. Detector name supports wildcard syntax. Detectors are invoked and merged sequentially. Static attributes and schema_url comprise a resource which is merged last.
-    detectors:
-      - name: com.domain.resources.CustomResourceProvider
-      - name: io.opentelemetry.sdk.extension.resources.*
-        excluded_attribute_keys:
-          # Exclude process.command_line, which is often verbose and may contain secrets
-          - process.command_line
-    # List of static resource attribute key / value pairs.
+    # Key-value pairs to be used as resource attributes.
+    #
+    # Environment variable: OTEL_RESOURCE_ATTRIBUTES
     attributes:
-      service.name: my-service
-      service.instance.id: 1234
-    # The resource schema URL.
-    schema_url: http://schema.com
-  # Configure SDK logging.
-  logging:
-    level: info
-  # General attribute limits, applies to span and log attributes.
-  attribute_limits:
-    attribute_count_limit: 10
-    attribute_value_length_limit: 100
-  # Tracer provider configuration.
-  tracer_provider:
-    # List of span processors, to be added sequentially. Each span processor has a name and args used to configure it.
-    span_processors:
-      # Add simple span processor configured to export with the logging exporter.
-      - name: simple
-        args:
-          # Simple span processor takes exporter as an arg, which is composed of a name an args used to configure it.
-          exporter:
-            name: logging
-      # Add batch span processor configured to export with the OTLP exporter.
-      - name: batch
-        args:
-          # Batch span processor takes exporter as an arg, which is composed of a name an args used to configure it.
-          exporter:
-            name: otlp
-            # Reference the shared.otlp_args anchor defined earlier in the file.
-            args: *otlpArgs
-          # Configure batch span processor batch size and interval settings.
-          max_queue_size: 100
-          scheduled_delay_millis: 1_000
-          export_timeout_millis: 30_000
-          max_export_batch_size: 200
-    # The sampler. Each sampler has a name and args used to configure it.
-    sampler:
-      name: parentbased
-      args:
-        # The parentbased sampler takes root_sampler as an arg, is another sampler itself.
-        root_sampler:
-          name: traceidratio
-          args:
-            ratio: 0.01
-    # The span limits.
-    span_limits:
-      # Merge general attribute limits with span specific limits.
-      attribute_count_limit: 20
-      attribute_value_length_limit: 200
-      # Span specific limits.
-      attribute_count_per_event_limit: 5
-      attribute_count_per_link_limit: 5
-      event_count_limit: 10
-      link_count_limit: 4
-  # Meter provider configuration.
-  meter_provider:
-    # List of metric readers. Each metric reader has a name and args used to configure it.
-    metric_readers:
-      # Add periodic metric reader configured to export with the logging exporter using the default interval settings.
-      - name: periodic
-        args:
-          # Periodic metric reader takes exporter as an arg, which is composed of a name an args used to configure it.
-          exporter:
-            name: logging
-      # Add periodic metric reader configured to export with the otlp exporter every 5_000 ms.
-      - name: periodic
-        args:
-          # Periodic metric reader takes exporter as an arg, which is composed of a name an args used to configure it.
-          exporter:
-            name: otlp
-            # Reference the shared.otlp_args anchor defined earlier in the file.
-            args: *otlpArgs
-          # Configure periodic metric reader interval.
-          interval_millis: 5_000
-    # List of views. Each view consists of a selector defining criteria for which instruments are selected, and a view defining the resulting metric.
-    views:
-      # Add a "kitchen sink" view, using all selector fields, and using all configurable aspects of the view.
-      - selector:
-          # Select instruments with this name, including wildcard matching.
-          instrument_name: my-instrument
-          # Select instruments with this type.
-          instrument_type: COUNTER
-          # Select instruments with this meter name.
-          meter_name: my-meter
-          # Select instruments with this meter version.
-          meter_version: 1.0.0
-          # Select instruments with this meter schema url.
-          meter_schema_url: http://example.com
-        view:
-          # Change the metric name.
-          name: new-instrument-name
-          # Change the metric description.
-          description: new-description
-          # Change the aggregation. In this case, use an explicit bucket histogram with bucket boundaries [1.0, 2.0, 5.0].
-          aggregation:
-            name: explicit_bucket_histogram
-            args:
-              bucket_boundaries: [1.0, 2.0, 5.0]
-          # List of attribute keys to retain. Keys included on measurements and not in this list will be ignored.
-          attribute_keys:
-            - foo
-            - bar
-      # Add a simpler view, which configures the drop aggregation for instruments whose name matches "*.server.duration".
-      - selector:
-          instrument_name: "*.server.duration"
-        view:
-          aggregation:
-            name: drop
-  # Logger provider configuration.
-  logger_provider:
-    # List of log processors, to be added sequentially. Each log processor has a name and args used to configure it.
-    log_record_processors:
-      # Add batch log processor configured to export with the OTLP exporter.
-      - name: batch
-        args:
-          # Batch log processor takes exporter as an arg, which is composed of a name an args used to configure it.
-          exporter:
-            name: otlp
-            # Reference the shared.otlp_args anchor defined earlier in the file.
-            args: *otlpArgs
-          # Configure batch log processor batch size and interval settings.
-          max_queue_size: 50
-          scheduled_delay_millis: 1_000
-          export_timeout_millis: 30_000
-          max_export_batch_size: 200
-  # List of context propagators. Each propagator has a name and args used to configure it. None of the propagators here have configurable options so args are not demonstrated.
+      # Sets the value of the `service.name` resource attribute
+      #
+      # Environment variable: OTEL_SERVICE_NAME
+      service.name: !!str "unknown_service"
+  # Configure context propagators. Each propagator has a name and args used to configure it. None of the propagators here have configurable options so args is not demonstrated.
+  #
+  # Environment variable: OTEL_PROPAGATORS
   propagators:
     - name: tracecontext
     - name: baggage
-# Undefined placeholder for instrumentation specific configuration. Need to define how instrumentation is configured in a language agnostic way.
-instrumentation:
+    - name: b3
+    - name: b3multi
+    - name: b3multijaeger
+    - name: xray
+    - name: ottrace
+  # Configure general attribute limits. See also sdk.tracer_provider.span_limits, sdk.logger_provider.log_record_limits.
+  attribute_limits:
+    # Set the max attribute value size.
+    #
+    # Environment variable: OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT
+    attribute_value_length_limit: 4096
+    # Set the max attribute count.
+    #
+    # Environment variable: OTEL_ATTRIBUTE_COUNT_LIMIT
+    attribute_count_limit: 128
+  # Configure the tracer provider.
+  tracer_provider:
+    # Span exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a span processor.
+    exporters:
+      # Configure the otlp exporter.
+      otlp:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+        protocol: http/protobuf
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+        endpoint: http://localhost:4318/v1/metrics
+        # Sets the certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
+        certificate: /app/cert.pem
+        # Sets the mTLS private client key.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY
+        client_key: /app/cert.pem
+        # Sets the mTLS client certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE
+        client_certificate: /app/cert.pem
+        # Sets the headers.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_TRACES_HEADERS
+        headers:
+          api-key: 1234
+        # Sets the compression.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
+        compression: gzip
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
+        timeout: 10000
+      # Configure the zipkin exporter.
+      zipkin:
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_ZIPKIN_ENDPOINT
+        endpoint: http://localhost:9411/api/v2/spans
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_ZIPKIN_TIMEOUT
+        timeout: 10000
+      # Configure the jaeger exporter.
+      jaeger:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_PROTOCOL
+        protocol: http/thrift.binary
+        # Sets the endpoint. Applicable when protocol is http/thrift.binary or grpc.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_ENDPOINT
+        endpoint: http://localhost:14268/api/traces
+        # Sets the max time to wait for each export. Applicable when protocol is http/thrift.binary or grpc.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_TIMEOUT
+        timeout: 10000
+        # Sets the username for HTTP basic authentication. Applicable when protocol is http/thrift.binary or grpc.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_USER
+        user: user
+        # Sets the password for HTTP basic authentication. Applicable when protocol is http/thrift.binary or grpc.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_PASSWORD
+        password: password
+        # Sets the hostname of the Jaeger agent. Applicable when protocol is udp/thrift.compact or udp/thrift.binary.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_AGENT_PORT
+        agent_host: localhost
+        # Sets the port of the Jaeger agent. Applicable when protocol is udp/thrift.compact or udp/thrift.binary.
+        #
+        # Environment variable: OTEL_EXPORTER_JAEGER_AGENT_HOST
+        agent_port: 6832
+    # List of span processors. Each span processor has a name and args used to configure it.
+    span_processors:
+      # Add a batch span processor.
+      #
+      # Environment variable: OTEL_BSP_*, OTEL_TRACES_EXPORTER
+      - name: batch
+        # Configure the batch span processor.
+        args:
+          # Sets the delay interval between two consecutive exports.
+          #
+          # Environment variable: OTEL_BSP_SCHEDULE_DELAY
+          schedule_delay: 5000
+          # Sets the maximum allowed time to export data.
+          #
+          # Environment variable: OTEL_BSP_EXPORT_TIMEOUT
+          export_timeout: 30000
+          # Sets the maximum queue size.
+          #
+          # Environment variable: OTEL_BSP_MAX_QUEUE_SIZE
+          max_queue_size: 2048
+          # Sets the maximum batch size.
+          #
+          # Environment variable: OTEL_BSP_MAX_EXPORT_BATCH_SIZE
+          max_export_batch_size: 512
+          # Sets the exporter. Exporter must refer to a key in sdk.tracer_provider.exporters.
+          #
+          # Environment variable: OTEL_TRACES_EXPORTER
+          exporter: otlp
+      # Add a batch span processor configured with zipkin exporter. For full description of options see sdk.tracer_provider.span_processors[0].
+      - name: batch
+        args:
+          exporter: zipkin
+      # Add a batch span processor configured with jaeger exporter. For full description of options see sdk.tracer_provider.span_processors[0].
+      - name: batch
+        args:
+          exporter: jaeger
+    # Configure the span limits. See also sdk.attribute_limits.
+    span_limits:
+      # Set the max span attribute value size. Overrides sdk.attribute_limits.attribute_value_length_limit.
+      #
+      # Environment variable: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT
+      attribute_value_length_limit: 4096
+      # Set the max span attribute count. Overrides sdk.attribute_limits.attribute_count_limit.
+      #
+      # Environment variable: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
+      attribute_count_limit: 128
+      # Set the max span event count.
+      #
+      # Environment variable: OTEL_SPAN_EVENT_COUNT_LIMIT
+      event_count_limit: 128
+      # Set the max span link count.
+      #
+      # Environment variable: OTEL_SPAN_LINK_COUNT_LIMIT
+      link_count_limit: 128
+      # Set the max attributes per span event.
+      #
+      # Environment variable: OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT
+      event_attribute_count_limit: 128
+      # Set the max attributes per span link.
+      #
+      # Environment variable: OTEL_LINK_ATTRIBUTE_COUNT_LIMIT
+      link_attribute_count_limit: 128
+    # Configuration for samplers. Each key refers to the type of sampler. Values configure the sampler. One key must be referenced in sdk.tracer_provider.sampler.
+    sampler_config:
+      # Configure the always_on sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=always_on
+      always_on:
+      # Configure the always_off sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=always_off
+      always_off:
+      # Configure the trace_id_ratio_based sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=traceidratio
+      trace_id_ratio_based:
+        # Set the sampling ratio.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=traceidratio, OTEL_TRACES_SAMPLER_ARG=0.0001
+        ratio: 0.0001
+      # Configure the parent_based sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=parentbased_*
+      parent_based:
+        # Set root sampler. Must refer a key in sdk.tracer_provider.sampler_config.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=parentbased_*
+        root: trace_id_ratio_based
+        # Set the sampler used when the parent is remote and is sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        remote_parent_sampled: always_on
+        # Set the sampler used when the parent is remote and is not sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        remote_parent_not_sampled: always_off
+        # Set the sampler used when the parent is local and is sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        local_parent_sampled: always_on
+        # Set the sampler used when the parent is local and is not sampled. Must refer a key in sdk.tracer_provider.sampler_config.
+        local_parent_not_sampled: always_off
+      # Configure the jaeger_remote sampler.
+      #
+      # Environment variable: OTEL_TRACES_SAMPLER=jaeger_remote
+      jaeger_remote:
+        # Set the endpoint.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=jaeger_remote, OTEL_TRACES_SAMPLER_ARG=endpoint=http://localhost:14250
+        endpoint: http://localhost:14250
+        # Set the polling interval.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=jaeger_remote, OTEL_TRACES_SAMPLER_ARG=pollingINtervalMs=5000
+        polling_interval: 5000
+        # Set the initial sampling rate.
+        #
+        # Environment variable: OTEL_TRACES_SAMPLER=jaeger_remote, OTEL_TRACES_SAMPLER_ARG=initialSamplingRate=0.25
+        initial_sampling_rate: 0.25
+    # Set the sampler. Sampler must refer to a key in sdk.tracer_provider.sampler_config.
+    sampler: parent_based
+  # Configure the meter provider.
+  meter_provider:
+    # Metric exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a metric reader.
+    exporters:
+      # Configure the otlp exporter.
+      otlp:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+        protocol: http/protobuf
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+        endpoint: http://localhost:4318/v1/metrics
+        # Sets the certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
+        certificate: /app/cert.pem
+        # Sets the mTLS private client key.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY
+        client_key: /app/cert.pem
+        # Sets the mTLS client certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE
+        client_certificate: /app/cert.pem
+        # Sets the headers.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_METRICS_HEADERS
+        headers:
+          api-key: 1234
+        # Sets the compression.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
+        compression: gzip
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
+        timeout: 10000
+        # Sets the temporality preference.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+        temporality_preference: delta
+        # Sets the default histogram aggregation.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
+        default_histogram_aggregation: exponential_bucket_histogram
+    # List of metric readers. Each metric reader has a name and args used to configure it.
+    metric_readers:
+      # Add a periodic metric reader.
+      #
+      # Environment variable: OTEL_METRICS_EXPORT_*, OTEL_METRICS_EXPORTER
+      - name: periodic
+        args:
+          # Sets delay interval between the start of two consecutive export attempts.
+          #
+          # Environment variable: OTEL_METRIC_EXPORT_INTERVAL
+          interval: 5000
+          # Sets the maximum allowed time to export data.
+          #
+          # Environment variable: OTEL_METRIC_EXPORT_TIMEOUT
+          timeout: 30000
+          # Sets the exporter. Exporter must refer to a key in sdk.meter_provider.exporters.
+          #
+          # Environment variable: OTEL_METRICS_EXPORTER
+          exporter: otlp
+      # Add a prometheus metric reader. Some languages SDKs may implement this as a metric exporter.
+      #
+      # Environment variable: OTEL_METRICS_EXPORTER=prometheus
+      - name: prometheus
+        args:
+          # Set the host used to serve metrics in the prometheus format.
+          #
+          # Environment variable: OTEL_EXPORTER_PROMETHEUS_HOST
+          host: localhost
+          # Set the port used to serve metrics in the prometheus format.
+          #
+          # Environment variable: OTEL_EXPORTER_PROMETHEUS_PORT
+          port: 9464
+    # List of views. Each view has a selector which determines the instrument(s) it applies to, and a view which configures resulting metric(s).
+    views:
+      # Add a view. The selection criteria and view aim to demonstrate the configuration surface area and are not representative of what a user would be expected to do.
+      - selector:
+          # Select instrument(s) by name.
+          instrument_name: my-instrument
+          # Select instrument(s) by type.
+          instrument_type: histogram
+          # Select instrument(s) by meter name.
+          meter_name: my-meter
+          # Select instrument(s) by meter version.
+          meter_version: 1.0.0
+          # Select instrument(s) by meter schema URL.
+          meter_schema_url: https://opentelemetry.io/schemas/1.16.0
+        view:
+          # Set the name of resulting metric(s).
+          name: new_instrument_name
+          # Set the description of resulting metric(s).
+          description: new_description
+          # Set the aggregation of resulting metric(s). Aggregation has a name an args used to configure it.
+          aggregation:
+            # Set the aggregation name. Options include: default, drop, sum, last_value, explicit_bucket_histogram, exponential_bucket_histogram.
+            name: explicit_bucket_histogram
+            # Configure the aggregation.
+            args:
+              # Set the bucket boundaries. Applicable when aggregation is explicit_bucket_histogram.
+              boundaries: [1.0, 2.0, 5.0]
+              # Set whether min and max are recorded. Applicable when aggregation is explicit_bucket_histogram or exponential_bucket_histogram.
+              record_min_max: true
+              # Sets the max number of buckets in each of the positive and negative ranges. Applicable when aggregation is exponential_bucket_histogram.
+              max_size: 160
+          # Set the attribute keys to retain.
+          attribute_keys:
+            - key1
+            - key2
+  # Configure the logger provider.
+  logger_provider:
+    # Log record exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a log record processor.
+    exporters:
+      # Configure the otlp exporter.
+      otlp:
+        # Sets the protocol.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
+        protocol: http/protobuf
+        # Sets the endpoint.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+        endpoint: http://localhost:4318/v1/logs
+        # Sets the certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
+        certificate: /app/cert.pem
+        # Sets the mTLS private client key.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY
+        client_key: /app/cert.pem
+        # Sets the mTLS client certificate.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE
+        client_certificate: /app/cert.pem
+        # Sets the headers.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_LOGS_HEADERS
+        headers:
+          api-key: 1234
+        # Sets the compression.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_LOGS_COMPRESSION
+        compression: gzip
+        # Sets the max time to wait for each export.
+        #
+        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
+        timeout: 10000
+    # List of log record processors. Each log record processor has a name and args used to configure it.
+    log_record_processors:
+      # Add a batch log record processor.
+      #
+      # Environment variable: OTEL_BLRP_*, OTEL_LOGS_EXPORTER
+      - name: batch
+        # Configure the batch log record processor.
+        args:
+          # Sets the delay interval between two consecutive exports.
+          #
+          # Environment variable: OTEL_BLRP_SCHEDULE_DELAY
+          schedule_delay: 5000
+          # Sets the maximum allowed time to export data.
+          #
+          # Environment variable: OTEL_BLRP_EXPORT_TIMEOUT
+          export_timeout: 30000
+          # Sets the maximum queue size.
+          #
+          # Environment variable: OTEL_BLRP_MAX_QUEUE_SIZE
+          max_queue_size: 2048
+          # Sets the maximum batch size.
+          #
+          # Environment variable: OTEL_BLRP_MAX_EXPORT_BATCH_SIZE
+          max_export_batch_size: 512
+          # Sets the exporter. Exporter must refer to a key in sdk.loger_provider.exporters.
+          #
+          # Environment variable: OTEL_LOGS_EXPORTER
+          exporter: otlp
+    # Configure the log record limits. See also sdk.attribute_limits.
+    log_record_limits:
+      # Set the max log record attribute value size. Overrides sdk.attribute_limits.attribute_value_length_limit.
+      #
+      # Environment variable: OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT
+      attribute_value_length_limit: 4096
+      # Set the max log record attribute count. Overrides sdk.attribute_limits.attribute_count_limit.
+      #
+      # Environment variable: OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT
+      attribute_count_limit: 128
