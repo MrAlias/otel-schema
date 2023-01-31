@@ -118,7 +118,8 @@
             "additionalProperties": false,
             "properties": {
                 "protocol": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^(http|grpc)\/(protobuf|json)"
                 },
                 "endpoint": {
                     "type": "string",

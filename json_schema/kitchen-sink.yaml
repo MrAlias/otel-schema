@@ -243,7 +243,7 @@ sdk:
         # Sets the protocol.
         #
         # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
-        protocol: http/protobuf
+        protocol: grpc/protobuf
         # Sets the endpoint.
         #
         # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
