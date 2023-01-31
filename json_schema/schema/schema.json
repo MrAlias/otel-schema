@@ -49,13 +49,7 @@
                 }
             },
             "required": [
-                "attribute_limits",
-                "disabled",
-                "logger_provider",
-                "meter_provider",
-                "propagators",
-                "resource",
-                "tracer_provider"
+                "disabled"
             ],
             "title": "SDK"
         },
@@ -154,28 +148,14 @@
                 }
             },
             "required": [
-                "certificate",
-                "client_certificate",
-                "client_key",
-                "compression",
                 "endpoint",
-                "headers",
-                "protocol",
-                "timeout"
+                "protocol"
             ],
             "title": "Otlp"
         },
         "Headers": {
             "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "api-key": {
-                    "type": "integer"
-                }
-            },
-            "required": [
-                "api-key"
-            ],
+            "additionalProperties": true,
             "title": "Headers"
         },
         "Processor": {
@@ -437,7 +417,7 @@
         },
         "Attributes": {
             "type": "object",
-            "additionalProperties": false,
+            "additionalProperties": true,
             "properties": {
                 "service.name": {
                     "type": "string"
@@ -473,9 +453,6 @@
             },
             "required": [
                 "exporters",
-                "sampler",
-                "sampler_config",
-                "span_limits",
                 "span_processors"
             ],
             "title": "TracerProvider"
@@ -483,22 +460,17 @@
         "TracerProviderExporters": {
             "type": "object",
             "additionalProperties": false,
-            "properties": {
-                "otlp": {
+            "patternProperties": {
+                "^otlp/.*": {
                     "$ref": "#/definitions/Otlp"
                 },
-                "zipkin": {
+                "^zipkin/.*": {
                     "$ref": "#/definitions/Zipkin"
                 },
-                "jaeger": {
+                "^jaeger/.*": {
                     "$ref": "#/definitions/Jaeger"
                 }
             },
-            "required": [
-                "jaeger",
-                "otlp",
-                "zipkin"
-            ],
             "title": "TracerProviderExporters"
         },
         "Jaeger": {
