@@ -7,8 +7,8 @@ import "strings"
 @title("OpenTelemetry SDK View Entry Configuration")
 
 #Config: {
+	scheme_version: string
 	sdk: #SDK
-	...
 }
 
 #SDK: {
@@ -19,6 +19,8 @@ import "strings"
 	attribute_limits: #AttributeLimits
 
 	tracer_provider: #TracerProvider
+	meter_provider: #MeterProvider
+	logger_provider: #LoggerProvider
 }
 
 #Propagator: {
@@ -28,6 +30,91 @@ import "strings"
 #AttributeLimits: {
 	attribute_value_length_limit: int
 	attribute_count_limit: int
+}
+
+#MeterProvider: {
+	exporters: [Name=_]: #MetricExporter & {type: strings.Split(Name, "/")[0]}
+	metric_readers: [...#MetricReader]
+	views: [...#View]
+	...
+}
+
+#View: {
+	selector: {
+		instrument_name: string
+		instrument_type: string
+		meter_name: string
+		meter_version: string
+		meter_schema_url: string
+	}
+	view: {
+		name: string
+		description: string
+		aggregation: #Aggregation
+		attribute_keys: [...string]
+	}
+}
+
+#Aggregation: #SumAggregation | #LastValueAggregation | #ExplicitHistogramAggregation | #DropAggregation
+
+#SumAggregation: {
+	name: "sum"
+}
+
+#LastValueAggregation: {
+	name: "last_value"
+}
+
+#DropAggregation: {
+	name: "drop"
+}
+
+#ExplicitHistogramAggregation: {
+	name: "explicit_bucket_histogram"
+	args: {
+		boundaries: [...float]
+		record_min_max: bool
+		max_size: int
+	}
+}
+
+#MetricReader: #PeriodicReader | #PullReader
+
+#PeriodicReader: {
+	name: string
+	args: {
+	  interval: int
+	  timeout: int
+	  exporter: string
+	}
+}
+
+#PullReader: {
+	name: string
+	args: {
+		host: string
+		port: int
+	}
+}
+
+#LoggerProvider: {
+	exporters:  [Name=_]: #Exporter & {type: strings.Split(Name, "/")[0]}
+	log_record_processors: [...#LogRecordProcessors]
+	log_record_limits: {
+		attribute_value_length_limit: int
+		attribute_count_limit: int
+	}
+}
+
+#LogRecordProcessors: {
+	name: "batch"
+	args: {
+		schedule_delay: int
+		export_timeout: int
+		max_queue_size: int
+		max_export_batch_size: int
+		exporter: string
+	}
 }
 
 #TracerProvider: {
@@ -48,7 +135,9 @@ import "strings"
 	link_attribute_count_limit: int
 }
 
-#Exporter: #OTLPExporter | #ZipkinExporter
+#MetricExporter: #MetricOTLPExporter
+
+#Exporter: #OTLPExporter | #ZipkinExporter | #JaegerExporter
 
 #OTLPExporter: {
 	type: "otlp"
@@ -70,10 +159,42 @@ import "strings"
 	timeout: int
 }
 
+#MetricOTLPExporter: {
+	type: "otlp"
+	protocol: *"grpc" | "http/protobuf"
+
+	if protocol == "grpc" {
+		endpoint: string | *"http://localost:4317"
+	}
+
+	if protocol == "http" {
+		endpoint: string | *"http://localost:4318"
+	}
+
+	certificate: string
+	client_key: string
+	client_certificate: string
+	headers: #Headers
+	compression: *"gzip" | "none" | string
+	timeout: int
+	...
+}
+
 #ZipkinExporter: {
 	type: "zipkin"
     endpoint: string | *"http://localhost:9411/api/v2/spans"
     timeout: int | *10000
+}
+
+#JaegerExporter: {
+	type: "jaeger"
+	protocol: "http/thrift.binary" | "http/protobuf"
+	endpoint: string | *"http://localhost:14268/api/traces"
+	timeout: int | *10000
+	user: string
+	password: string
+	agent_host: string
+	agent_port: int
 }
 
 #SamplerConfig: {
@@ -88,6 +209,11 @@ import "strings"
 		remote_parent_not_sampled: #Sampler
 		local_parent_sampled: #Sampler
 		local_parent_not_sampled: #Sampler
+	}
+	jaeger_remote: {
+		endpoint: string | *"http://localhost:14250"
+		polling_interval: int | *5000
+		initial_sampling_rate: float | *0.25
 	}
 }
 
