@@ -28,7 +28,7 @@ sdk:
     - name: baggage
     - name: b3
     - name: b3multi
-    - name: b3multijaeger
+    - name: jaeger
     - name: xray
     - name: ottrace
   # Configure general attribute limits. See also sdk.tracer_provider.span_limits, sdk.logger_provider.log_record_limits.
