@@ -1,12 +1,14 @@
 # OpenTelemetry Configuration
 
-A new configuration interface is proposed here in the form of a configuration model, which can be expressed as a file, and validated through a schema.
+A new configuration interface is proposed here in the form of a configuration model, which can be expressed as a file, and validated through a published schema.
 
 ## Motivation
 
 OpenTelemetry specifies code that can operate in a variety of ways based on the end-user’s desired mode of operation. This requires a configuration interface be provided to the user so they are able to communicate this information. Currently, OpenTelemetry specifies this interface in the form of the API exposed by the SDKs and environment variables. This environment variable interface is limited in the structure of information it can communicate and the primitives it can support.
-Environment Variable Interface Limitations
-The environment variable interface suffers from the following identified limitations.
+
+### Environment Variable Interface Limitations
+
+The environment variable interface suffers from the following identified limitations:
 
 * **Flat**. Structured data is only allowed by using higher-level naming or data encoding schemes. Examples of configuration limited by lack of structured configuration include:
   * Configuring multiple span processors, periodic metric readers, or log record processors.
@@ -17,22 +19,30 @@ The environment variable interface suffers from the following identified limitat
 * **Limited validation**. Validation can only be performed by the receiver, there is no meta-configuration language to validate input.
 * **Difficult to extend**. It’s difficult to anticipate the requirements of configuring custom extension components (processors, exporters, samplers, etc), and likely not practical to represent them in a flat structure. As a result, the environment variable interface is limited to components explicitly mentioned in the specification.
 
-## Explanation (TBD)
+## Explanation
 
-Using a configuration model or configuration file, users could configure all options currently available via environment variables.
+Using a configuration model or configuration file, users can configure all options currently available via environment variables.
 
 ### Goals
 
-* The configuration file must be language implementation agnostic. It must not contain structure or statements that only can be interpreted in a subset of languages. This does not preclude the possibility that the configuration file can have specific extensions included for a subset of languages, but it does mean that the standard format of the file must be interpretable by all implementation languages.
+* The configuration must be language implementation agnostic. It must not contain structure or statements that only can be interpreted in a subset of languages. This does not preclude the possibility that the configuration can have specific extensions included for a subset of languages, but it does mean that the standard format must be interpretable by all implementation languages.
 * Broadly supported format. Ideally, the information encoded in the file can be decoded using native tools for all OpenTelemetry implementation languages. However, it must be possible for languages that do not natively support an encoding format to write their own parsers. This means that the file encoding format must be specified in a language agnostic form.
-* The file format must support structured data. At the minimum arrays and associative arrays.
-* The file format must support at least null, string, double precision floating point (IEEE 754-1985), or signed 64 bit integer value types.
-* Extensible. Custom span processors, exporters, samplers, or other user defined code can be configured using this format.
+* The configuration format must support structured data. At the minimum arrays and associative arrays.
+* The format must support at least null, string, double precision floating point (IEEE 754-1985), or signed 64 bit integer value types.
+* Custom span processors, exporters, samplers, or other user defined code can be configured using this format.
 * Configure SDK, but also configure instrumentation.
-* Versioning: needs to be able to version stability while evolving
-* (stretch) The file format can be validated client side.
+* It needs to be able to version stability while evolving
+* The file format can be validated client side.
 
 ## Internal details
+
+The schema for OpenTelemetry configuration is to be published in a repository to allow language implementations to leverage that definition to automatically generate code and/or validate end-user configuration. This will ensure that all implementations provide a consistent experience for any version of the schema they support. An example of such a proposed schema is available [here](https://github.com/MrAlias/otel-schema/tree/main/json_schema/schema).
+
+The working group proposes the use of [JSON Schema](https://json-schema.org/) as the language to define the schema. It provides:
+
+* support for client-side validation
+* code generation
+* broad support across languages
 
 In order to provide a minimal API surface area, implementations *MUST* support the following methods.
 
@@ -290,7 +300,7 @@ otel.ParseAndValidateConfiguration(config{
 )
 ```
 
-The configuration model *MAY* also be configured via the use of a configuration file. The following demonstrates the proposed configuration file format:
+The configuration model *MUST* also be configurable via the use of a configuration file. The following demonstrates an example of a configuration file format (full example [here](https://github.com/MrAlias/otel-schema/blob/main/config.yaml)):
 
 ```yaml
 # include version specification in configuration files to help with parsing and schema evolution.
@@ -318,14 +328,7 @@ sdk:
   # Configure context propagators. Each propagator has a name and args used to configure it. None of the propagators here have configurable options so args is not demonstrated.
   #
   # Environment variable: OTEL_PROPAGATORS
-  propagators:
-    - name: tracecontext
-    - name: baggage
-    - name: b3
-    - name: b3multi
-    - name: b3multijaeger
-    - name: xray
-    - name: ottrace
+  propagators: [tracecontext, baggage]
   # Configure the tracer provider.
   tracer_provider:
     # Span exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a span processor.
@@ -371,148 +374,10 @@ sdk:
           # Environment variable: OTEL_TRACES_EXPORTER
           exporter: zipkin
   # Configure the meter provider.
-  meter_provider:
-    # Metric exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a metric reader.
-    exporters:
-      # Configure the otlp exporter.
-      otlp:
-        # Sets the protocol.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
-        protocol: http/protobuf
-        # Sets the endpoint.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-        endpoint: http://localhost:4318/v1/metrics
-        # Sets the certificate.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
-        certificate: /app/cert.pem
-        # Sets the mTLS private client key.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY
-        client_key: /app/cert.pem
-        # Sets the mTLS client certificate.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE
-        client_certificate: /app/cert.pem
-        # Sets the headers.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_METRICS_HEADERS
-        headers:
-          api-key: 1234
-        # Sets the compression.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
-        compression: gzip
-        # Sets the max time to wait for each export.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
-        timeout: 10000
-        # Sets the temporality preference.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
-        temporality_preference: delta
-        # Sets the default histogram aggregation.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
-        default_histogram_aggregation: exponential_bucket_histogram
-    # List of metric readers. Each metric reader has a name and args used to configure it.
-    metric_readers:
-      # Add a periodic metric reader.
-      #
-      # Environment variable: OTEL_METRICS_EXPORT_*, OTEL_METRICS_EXPORTER
-      - name: periodic
-        args:
-          # Sets delay interval between the start of two consecutive export attempts.
-          #
-          # Environment variable: OTEL_METRIC_EXPORT_INTERVAL
-          interval: 5000
-          # Sets the maximum allowed time to export data.
-          #
-          # Environment variable: OTEL_METRIC_EXPORT_TIMEOUT
-          timeout: 30000
-          # Sets the exporter. Exporter must refer to a key in sdk.meter_provider.exporters.
-          #
-          # Environment variable: OTEL_METRICS_EXPORTER
-          exporter: otlp
-  # Configure the logger provider.
-  logger_provider:
-    # Log record exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a log record processor.
-    exporters:
-      # Configure the otlp exporter.
-      otlp:
-        # Sets the protocol.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
-        protocol: http/protobuf
-        # Sets the endpoint.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-        endpoint: http://localhost:4318/v1/logs
-        # Sets the certificate.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
-        certificate: /app/cert.pem
-        # Sets the mTLS private client key.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY
-        client_key: /app/cert.pem
-        # Sets the mTLS client certificate.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE
-        client_certificate: /app/cert.pem
-        # Sets the headers.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_LOGS_HEADERS
-        headers:
-          api-key: 1234
-        # Sets the compression.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_LOGS_COMPRESSION
-        compression: gzip
-        # Sets the max time to wait for each export.
-        #
-        # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
-        timeout: 10000
-    # List of log record processors. Each log record processor has a name and args used to configure it.
-    log_record_processors:
-      # Add a batch log record processor.
-      #
-      # Environment variable: OTEL_BLRP_*, OTEL_LOGS_EXPORTER
-      - name: batch
-        # Configure the batch log record processor.
-        args:
-          # Sets the delay interval between two consecutive exports.
-          #
-          # Environment variable: OTEL_BLRP_SCHEDULE_DELAY
-          schedule_delay: 5000
-          # Sets the maximum allowed time to export data.
-          #
-          # Environment variable: OTEL_BLRP_EXPORT_TIMEOUT
-          export_timeout: 30000
-          # Sets the maximum queue size.
-          #
-          # Environment variable: OTEL_BLRP_MAX_QUEUE_SIZE
-          max_queue_size: 2048
-          # Sets the maximum batch size.
-          #
-          # Environment variable: OTEL_BLRP_MAX_EXPORT_BATCH_SIZE
-          max_export_batch_size: 512
-          # Sets the exporter. Exporter must refer to a key in sdk.loger_provider.exporters.
-          #
-          # Environment variable: OTEL_LOGS_EXPORTER
-          exporter: otlp
-
+  ...
 ```
 
-From a technical perspective, how do you propose accomplishing the proposal? In particular, please explain:
-
-* How the change would impact and interact with existing functionality
-* Likely error modes (and how to handle them)
-* Corner cases (and how to handle them)
-
-While you do not need to prescribe a particular implementation - indeed, OTEPs should be about **behaviour**, not implementation! - it may be useful to provide at least one suggestion as to how the proposal *could* be implemented. This helps reassure reviewers that implementation is at least possible, and often helps them inspire them to think more deeply about trade-offs, alternatives, etc.
+The working group proposes that all implementations *MUST* support JSON as a configuration file format, and *SHOULD* support YAML.
 
 ## Trade-offs and mitigations (TBD)
 
@@ -520,9 +385,20 @@ What are some (known!) drawbacks? What are some ways that they might be mitigate
 
 Note that mitigations do not need to be complete *solutions*, and that they do not need to be accomplished directly through your proposal. A suggested mitigation may even warrant its own OTEP!
 
-## Prior art and alternatives (TBD)
+## Prior art and alternatives
 
-What are some prior and/or alternative approaches? For instance, is there a corresponding feature in OpenTracing or OpenCensus? What are some ideas that you have rejected?
+The working group looked to the OpenTelemetry Collector and OpenTelemetry Operator for inspiration and guidance.
+
+### Alternative schema languages
+
+In choosing to recommend JSON schema, the working group looked at the following options:
+
+* [Cue](https://cuelang.org/) - A promising simpler language to define a schema, the working group decided against CUE because:
+  * Tooling available for validating CUE files in languages outside of Go were limited.
+  * Familiarity and learning curve would create problems for both users and contributors of OpenTelemetry.
+* [Protobuf](https://developers.google.com/protocol-buffers) - With protobuf already used heavily in OpenTelemetry, the format was worth investigating as an option to define the schema. The working group decided against Protobuf because:
+  * Validation of schema requires additional logic with custom serialization. This would need to be re-implemented in each language.
+  * Validation errors are the result of serlization errors which can be difficult to interpret.
 
 ## Open questions
 
@@ -583,4 +459,3 @@ opentelemetry-instrument --config ./config.yaml ./python/app.py
 * https://github.com/open-telemetry/opentelemetry-specification/issues/2857
 * https://github.com/open-telemetry/opentelemetry-specification/issues/2746
 * https://github.com/open-telemetry/opentelemetry-specification/issues/2860
-
