@@ -120,6 +120,8 @@ sdk:
         #
         # Environment variable: OTEL_EXPORTER_JAEGER_AGENT_HOST
         agent_port: 6832
+      console:
+        level: verbose
     # List of span processors. Each span processor has a name and args used to configure it.
     span_processors:
       # Add a batch span processor.

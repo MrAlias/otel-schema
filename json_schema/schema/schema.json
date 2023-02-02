@@ -459,15 +459,15 @@
         },
         "TracerProviderExporters": {
             "type": "object",
-            "additionalProperties": false,
+            "additionalProperties": true,
             "patternProperties": {
-                "^otlp/.*": {
+                "^otlp.*": {
                     "$ref": "#/definitions/Otlp"
                 },
-                "^zipkin/.*": {
+                "^zipkin.*": {
                     "$ref": "#/definitions/Zipkin"
                 },
-                "^jaeger/.*": {
+                "^jaeger.*": {
                     "$ref": "#/definitions/Jaeger"
                 }
             },
@@ -478,7 +478,8 @@
             "additionalProperties": false,
             "properties": {
                 "protocol": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^http/thrift.binary$"
                 },
                 "endpoint": {
                     "type": "string",
