@@ -1,5 +1,5 @@
 # include version specification in configuration files to help with parsing and schema evolution.
-scheme_version: 0.1
+scheme_version: 0.1.0
 sdk:
   # Disable the SDK for all signals.
   #
