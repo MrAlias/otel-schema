@@ -1,0 +1,203 @@
+
+syntax = "proto3";
+
+package opentelemetry.proto.sdk.v1;
+
+message Config {
+  float scheme_version = 1;
+  SdkConfig sdk = 2;
+}
+
+message SdkConfig {
+  bool disabled = 1;
+  Resource resource = 2;
+  repeated Propagator propagators = 3; 
+  AttributeLimits attribute_limits = 4;
+  TracerProvider tracer_provider = 5;
+  MeterProvider meter_provider = 6;
+  LoggerProvider logger_provider = 7;
+}
+
+message Resource {
+  map<string, string> attributes = 1;
+}
+
+message Propagator {
+  string name = 1;
+}
+
+message AttributeLimits {
+  uint32 attribute_count_limit = 1;
+  uint32 attribute_value_length_limit = 2;
+}
+
+message TracerProvider {
+  Exporters exporters = 1;
+  repeated SpanProcessor span_processors = 2;
+  SpanLimits span_limits = 3;
+  SamplerConfig sampler_config = 4;
+  string sampler = 5;
+
+  message Exporters  {
+    OtlpExporter otlp = 1;
+    ZipkinExporter zipkin = 2;
+    JaegerExporter jaeger = 3;
+  }
+
+  message OtlpExporter {
+    string endpoint = 1;
+    int32 timeout = 2;
+    string protocol = 3;
+    string certificate = 4;
+    string client_key = 5;
+    string client_certificate = 6;
+    string compression = 7;
+    map<string, string> headers = 8; 
+  }
+
+  message ZipkinExporter {
+    string endpoint = 1;
+    int32 timeout = 2;
+  }
+
+  message JaegerExporter {
+    string protocol = 1;
+    string endpoint = 2;
+    int32 timeout = 3;
+    string user = 4;
+    string password = 5;
+    string agent_host = 6;
+    int32 agent_port = 7;
+  }
+
+  message SpanProcessor {
+    string name  = 1;
+    map<string, string> args  = 2;
+  }
+
+  message SpanLimits {
+    int32 attribute_value_length_limit = 1;
+    int32 attribute_count_limit = 2;
+    int32 event_count_limit = 3;
+    int32 link_count_limit = 4;
+    int32 event_attribute_count_limit = 5;
+    int32 link_attribute_count_limit = 6;
+  }
+
+  message SamplerConfig {
+    SimpleSamplerArgs always_on = 1;
+    SimpleSamplerArgs always_off = 2;
+    TraceIdRatioBasedSamplerArgs trace_id_ratio_based = 3;
+    ParentBasedSamplerArgs parent_based = 4;
+    JaegerRemoteSamplerArgs jaeger_remote = 5;
+
+    message SimpleSamplerArgs {}
+    message TraceIdRatioBasedSamplerArgs {
+      float ratio = 1;
+    }
+
+    message ParentBasedSamplerArgs {
+      string root = 1;
+      string remote_parent_sampled = 2;
+      string remote_parent_not_sampled = 3;
+      string local_parent_sampled = 4;
+      string local_parent_not_sampled = 5;
+    }
+
+    message JaegerRemoteSamplerArgs {
+      string endpoint = 1;
+      int32 polling_interval = 2;
+      float initial_sampling_rate = 3;
+    }
+  }
+}
+
+message MeterProvider {
+  Exporters exporters = 1;
+  repeated MetricReader metric_readers = 2;
+  repeated MetricView views = 3;
+
+  message Exporters  {
+    OtlpMetricsExporter otlp = 1;
+
+    message OtlpMetricsExporter {
+      string endpoint = 1;
+      int32 timeout = 2;
+      string protocol = 3;
+      string certificate = 4;
+      string client_key = 5;
+      string client_certificate = 6;
+      string compression = 7;
+      map<string, string> headers = 8; 
+      string temporality_preference = 9;
+      string default_histogram_aggregation = 10;
+    }
+  }
+  
+  message MetricReader {
+    string name  = 1;
+    map<string, string> args  = 2;
+  }
+
+  message MetricView {
+    MetricViewSelector selector = 1;
+    MetricViewDetails view = 2;
+
+    message MetricViewSelector {
+      string instrument_name = 1;
+      string instrument_type = 2;
+      string meter_name = 3;
+      string meter_version = 4;
+      string meter_schema_url = 5;
+    }
+
+    message MetricViewDetails {
+      string name = 1;
+      string description = 2;
+      MetricViewAggregation aggregation = 3;
+      repeated string attribute_keys = 4;
+
+      message MetricViewAggregation {
+        string name = 1;
+        MetricViewAggregationArgs args = 2;
+
+        message MetricViewAggregationArgs {
+          repeated float boundaries = 1;
+          bool record_min_max = 2;
+          int32 max_size = 3;
+        }
+      }
+    }
+  }
+}
+
+message LoggerProvider {
+  Exporters exporters = 1;
+  repeated Processor log_record_processors = 2;
+  Limits log_record_limits = 3;
+
+  message Exporters {
+    OtlpExporter otlp = 1;
+
+    message OtlpExporter {
+      string endpoint = 1;
+      int32 timeout = 2;
+      string protocol = 3;
+      string certificate = 4;
+      string client_key = 5;
+      string client_certificate = 6;
+      string compression = 7;
+      map<string, string> headers = 8; 
+    }
+  }  
+
+  message Processor {
+    string name = 1;
+    map<string, string> args  = 2;
+  }
+
+  message Limits {
+    int32 attribute_value_length_limit = 1;
+    int32 attribute_count_limit = 2;
+  }
+}
