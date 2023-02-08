@@ -1,0 +1,4 @@
+jsonschema
+pyyaml
+opentelemetry-api
+opentelemetry-sdk
