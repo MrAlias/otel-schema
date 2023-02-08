@@ -1,6 +1,0 @@
-attribute_count_limit: str1
-attribute_value_length_limit: str2
-attribute_count_per_event_limit: str3
-attribute_count_per_link_limit: str4
-event_count_limit: str5
-link_count_limit: str6

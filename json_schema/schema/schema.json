@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$schema": "https://json-schema.org/draft-06/schema",
     "$ref": "#/definitions/OpenTelemetryConfiguration",
     "definitions": {
         "OpenTelemetryConfiguration": {
@@ -113,7 +113,7 @@
             "properties": {
                 "protocol": {
                     "type": "string",
-                    "pattern": "^(http|grpc)\/(protobuf|json)"
+                    "pattern": "^(http|grpc)\\/(protobuf|json)"
                 },
                 "endpoint": {
                     "type": "string",
@@ -372,7 +372,7 @@
                 "boundaries": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "number"
                     }
                 },
                 "record_min_max": {

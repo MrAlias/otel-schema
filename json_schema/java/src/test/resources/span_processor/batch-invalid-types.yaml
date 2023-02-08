@@ -1,7 +1,0 @@
-name: batch
-args:
-  exporter: str1
-  max_queue_size: str2
-  scheduled_delay_millis: str3
-  export_timeout_millis: str4
-  max_export_batch_size: str5
