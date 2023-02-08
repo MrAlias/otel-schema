@@ -290,7 +290,7 @@ otel.ParseAndValidateConfiguration(config{
 )
 ```
 
-The configuration model *MAY* also be configured via the use of a configuration file. The following demonstrates the proposed configuration file format:
+The configuration model *MAY* also be configured via the use of a configuration file. The following demonstrates an example configuration file format:
 
 ```yaml
 # include version specification in configuration files to help with parsing and schema evolution.
