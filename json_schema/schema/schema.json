@@ -32,19 +32,19 @@
                 "propagators": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Propagator"
+                        "type": "string"
                     }
                 },
                 "attribute_limits": {
                     "$ref": "#/definitions/Limits"
                 },
-                "tracer_provider": {
+                "traces": {
                     "$ref": "#/definitions/TracerProvider"
                 },
-                "meter_provider": {
+                "metrics": {
                     "$ref": "#/definitions/MeterProvider"
                 },
-                "logger_provider": {
+                "logs": {
                     "$ref": "#/definitions/LoggerProvider"
                 }
             },
@@ -78,7 +78,7 @@
                     "$ref": "#/definitions/LoggerProviderExporters"
                 },
                 "log_record_processors": {
-                    "type": "array",
+                    "type": "object",
                     "items": {
                         "$ref": "#/definitions/Processor"
                     }
@@ -162,15 +162,11 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "name": {
-                    "type": "string"
-                },
                 "args": {
                     "$ref": "#/definitions/LogRecordProcessorArgs"
                 }
             },
             "required": [
-                "args",
                 "name"
             ],
             "title": "Processor"
@@ -436,7 +432,7 @@
                     "$ref": "#/definitions/TracerProviderExporters"
                 },
                 "span_processors": {
-                    "type": "array",
+                    "type": "object",
                     "items": {
                         "$ref": "#/definitions/Processor"
                     }

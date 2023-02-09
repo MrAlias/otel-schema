@@ -12,6 +12,7 @@ sdk:
   disabled: false
   # Configure resource attributes and resource detection for all signals.
   resource:
+    # detectors: [gcp, host]
     # Key-value pairs to be used as resource attributes.
     #
     # Environment variable: OTEL_RESOURCE_ATTRIBUTES
@@ -19,18 +20,11 @@ sdk:
       # Sets the value of the `service.name` resource attribute
       #
       # Environment variable: OTEL_SERVICE_NAME
-      service.name: !!str "unknown_service"
+      service.name: !!str "prototype-app"
   # Configure context propagators. Each propagator has a name and args used to configure it. None of the propagators here have configurable options so args is not demonstrated.
   #
   # Environment variable: OTEL_PROPAGATORS
-  propagators:
-    - name: tracecontext
-    - name: baggage
-    - name: b3
-    - name: b3multi
-    - name: jaeger
-    - name: xray
-    - name: ottrace
+  propagators: [tracecontext, baggage, b3multi]
   # Configure general attribute limits. See also sdk.tracer_provider.span_limits, sdk.logger_provider.log_record_limits.
   attribute_limits:
     # Set the max attribute value size.
@@ -42,7 +36,7 @@ sdk:
     # Environment variable: OTEL_ATTRIBUTE_COUNT_LIMIT
     attribute_count_limit: 128
   # Configure the tracer provider.
-  tracer_provider:
+  traces:
     # Span exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a span processor.
     exporters:
       # Configure the otlp exporter.
@@ -120,12 +114,13 @@ sdk:
         #
         # Environment variable: OTEL_EXPORTER_JAEGER_AGENT_HOST
         agent_port: 6832
+      console:
     # List of span processors. Each span processor has a name and args used to configure it.
     span_processors:
       # Add a batch span processor.
       #
       # Environment variable: OTEL_BSP_*, OTEL_TRACES_EXPORTER
-      - name: batch
+      batch/console:
         # Configure the batch span processor.
         args:
           # Sets the delay interval between two consecutive exports.
@@ -147,13 +142,13 @@ sdk:
           # Sets the exporter. Exporter must refer to a key in sdk.tracer_provider.exporters.
           #
           # Environment variable: OTEL_TRACES_EXPORTER
-          exporter: otlp
+          exporter: console
       # Add a batch span processor configured with zipkin exporter. For full description of options see sdk.tracer_provider.span_processors[0].
-      - name: batch
+      batch/zipkin:
         args:
           exporter: zipkin
       # Add a batch span processor configured with jaeger exporter. For full description of options see sdk.tracer_provider.span_processors[0].
-      - name: batch
+      batch/jaeger:
         args:
           exporter: jaeger
     # Configure the span limits. See also sdk.attribute_limits.
@@ -235,7 +230,7 @@ sdk:
     # Set the sampler. Sampler must refer to a key in sdk.tracer_provider.sampler_config.
     sampler: parent_based
   # Configure the meter provider.
-  meter_provider:
+  metrics:
     # Metric exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a metric reader.
     exporters:
       # Configure the otlp exporter.
@@ -349,7 +344,7 @@ sdk:
             - key1
             - key2
   # Configure the logger provider.
-  logger_provider:
+  logs:
     # Log record exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a log record processor.
     exporters:
       # Configure the otlp exporter.
@@ -392,7 +387,7 @@ sdk:
       # Add a batch log record processor.
       #
       # Environment variable: OTEL_BLRP_*, OTEL_LOGS_EXPORTER
-      - name: batch
+      batch/otlp:
         # Configure the batch log record processor.
         args:
           # Sets the delay interval between two consecutive exports.
