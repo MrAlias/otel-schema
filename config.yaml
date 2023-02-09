@@ -144,13 +144,13 @@ sdk:
           # Environment variable: OTEL_TRACES_EXPORTER
           exporter: console
       # Add a batch span processor configured with zipkin exporter. For full description of options see sdk.tracer_provider.span_processors[0].
-      batch/zipkin:
-        args:
-          exporter: zipkin
-      # Add a batch span processor configured with jaeger exporter. For full description of options see sdk.tracer_provider.span_processors[0].
-      batch/jaeger:
-        args:
-          exporter: jaeger
+      # batch/zipkin:
+      #   args:
+      #     exporter: zipkin
+      # # Add a batch span processor configured with jaeger exporter. For full description of options see sdk.tracer_provider.span_processors[0].
+      # batch/jaeger:
+      #   args:
+      #     exporter: jaeger
     # Configure the span limits. See also sdk.attribute_limits.
     span_limits:
       # Set the max span attribute value size. Overrides sdk.attribute_limits.attribute_value_length_limit.

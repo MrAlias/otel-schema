@@ -1,4 +1,5 @@
 
+import importlib
 import logging
 
 import yaml
@@ -7,6 +8,7 @@ from jsonschema import validate, validators
 from jsonschema.exceptions import ValidationError
 
 from opentelemetry.trace import set_tracer_provider
+
 
 class Config:
     def __init__(self, config=None) -> None:
@@ -17,14 +19,60 @@ class Config:
         # attributes
         from opentelemetry.sdk.resources import Resource
         return Resource.create(self._config.get("sdk").get("resource").get("attributes"))
+
+    # _get_exporter returns a configured span
+    def _get_exporter(self, signal, name):
+        if name not in self._config.get("sdk").get(signal).get("exporters"):
+            raise Exception(f"exporter {name} not specified for {signal} signal")
         
+        # TODO: replace to use entrypoints
+        _KNOWN_TRACE_EXPORTER_MAP = {
+            "traces": {
+                "console": {
+                    "pkg": "opentelemetry.sdk.trace.export",
+                    "class": "ConsoleSpanExporter",
+                },
+                "jaeger": {
+                    "pkg": "opentelemetry.exporter.jaeger.thrift",
+                    "class": "JaegerExporter",
+                },
+                "zipkin": {
+                    "pkg": "opentelemetry.exporter.zipkin.json",
+                    "class": "ZipkinExporter",
+                },
+            },
+            "metrics": {
+                "console": {
+                    "pkg": "opentelemetry.sdk.metrics.export",
+                    "class": "ConsoleExporter",
+                },
+            },
+            "logs": {
+                "console": {
+                    "pkg": "opentelemetry.sdk.logs.export",
+                    "class": "ConsoleExporter",
+                },
+            }
+        }
+        # look for known exporters
+        if name in _KNOWN_TRACE_EXPORTER_MAP.get(signal):
+            mod = importlib.__import__(_KNOWN_TRACE_EXPORTER_MAP.get(signal).get(name).get("pkg"), fromlist=[_KNOWN_TRACE_EXPORTER_MAP.get(signal).get(name).get("class")])
+            _cls = getattr(mod, _KNOWN_TRACE_EXPORTER_MAP.get(signal).get(name).get("class"))
+            return _cls()
+        # handle case where a custom exporter is used
+
     def set_tracer_provider(self):
         from opentelemetry.sdk.trace import TracerProvider
         provider = TracerProvider(resource=self._resource())
-        from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-        processor = BatchSpanProcessor(ConsoleSpanExporter())
-        provider.add_span_processor(processor)
+        for processor in self._config.get("sdk").get("traces").get("span_processors"):
+            logging.debug("adding span processor %s", processor)
+            try:
+                processor = BatchSpanProcessor(self._get_exporter("traces", self._config.get("sdk").get("traces").get("span_processors").get(processor).get("args").get("exporter")))
+                provider.add_span_processor(processor)
+            except ModuleNotFoundError as exc:
+                logging.error("module not found", exc)
         set_tracer_provider(provider)
 
     def set_meter_provider(self):
@@ -34,7 +82,6 @@ class Config:
         logging.debug("applying configuration %s", self._config)
         if self._config is None or self._config.get("sdk").get("disabled"):
             logging.debug("sdk disabled, nothing to apply")
-            # do nothing
             return
         self.set_tracer_provider()
         self.set_meter_provider()
