@@ -1,4 +1,0 @@
-name: zipkin
-args:
-  endpoint: 1
-  timeout: 2

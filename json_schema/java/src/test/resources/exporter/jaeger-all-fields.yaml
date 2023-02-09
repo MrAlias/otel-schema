@@ -1,8 +1,0 @@
-name: jaeger
-args:
-  protocol: str1
-  endpoint: str2
-  timeout: str3
-  user: str4
-  agent_host: str5
-  agent_port: str6

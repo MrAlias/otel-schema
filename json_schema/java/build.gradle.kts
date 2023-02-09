@@ -1,5 +1,6 @@
 plugins {
   `java-library`
+  application
 
   id("com.diffplug.spotless") version "6.9.0"
 }
@@ -13,10 +14,14 @@ spotless {
   }
 }
 
+application {
+  mainClass.set("io.opentelemetry.fileconfig.Application")
+}
+
 dependencies {
   implementation("org.yaml:snakeyaml:1.31")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.1")
-  implementation("com.networknt:json-schema-validator:1.0.72")
+  implementation("com.networknt:json-schema-validator:1.0.76")
 
   testImplementation(platform("org.junit:junit-bom:5.9.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
@@ -36,9 +41,9 @@ tasks {
       showStackTraces = true
     }
 
-    systemProperties(
+    environment(
       mapOf(
-        "SCHEMA_DIR" to project.projectDir.parent.toString() + "/schema",
+        "SCHEMA_FILE" to project.projectDir.parent.toString() + "/schema/schema.json",
         "REPO_DIR" to File(project.projectDir.parent).parent.toString()
       )
     )

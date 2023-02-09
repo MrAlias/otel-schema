@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toSet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.networknt.schema.JsonMetaSchema;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
@@ -12,7 +13,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Set;
 import org.yaml.snakeyaml.Yaml;
 
@@ -26,22 +26,16 @@ class YamlJsonSchemaValidator {
   /**
    * Create a schema validator for a JSON schema.
    *
-   * @param schemaDirectory the directory with JSON Schema files
    * @param schemaFile the specific schema to validate with {@link #validate(InputStream)}
-   * @param uriMapping map of URI lookup overrides
    */
-  YamlJsonSchemaValidator(File schemaDirectory, String schemaFile, Map<String, String> uriMapping) {
+  YamlJsonSchemaValidator(File schemaFile) {
     JsonSchemaFactory jsonSchemaFactory =
-        JsonSchemaFactory.builder(
-                // V202012 has a bug where items are not validated
-                JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909))
+        JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012))
+            .addMetaSchema(JsonMetaSchema.getV6())
             .objectMapper(MAPPER)
-            .addUriMappings(uriMapping)
             .build();
     try {
-      jsonSchema =
-          jsonSchemaFactory.getSchema(
-              new FileInputStream(schemaDirectory.getAbsolutePath() + "/" + schemaFile));
+      jsonSchema = jsonSchemaFactory.getSchema(new FileInputStream(schemaFile));
     } catch (IOException e) {
       throw new IllegalArgumentException("Unable to initialize validator", e);
     }
