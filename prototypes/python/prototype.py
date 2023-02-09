@@ -5,14 +5,13 @@ import sys
 
 from opentelemetry.trace import get_tracer
 
-from otel import parse_and_validate_from_config_file
+import otel
 
 
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
-    config = parse_and_validate_from_config_file(sys.argv[1], sys.argv[2])
-    config.apply()
+    otel.configure(otel.parse_and_validate_from_config_file(sys.argv[1], sys.argv[2]))
 
     tracer = get_tracer("config-prototype")
 
