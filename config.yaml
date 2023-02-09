@@ -12,6 +12,7 @@ sdk:
   disabled: false
   # Configure resource attributes and resource detection for all signals.
   resource:
+    # detectors: [gcp, host]
     # Key-value pairs to be used as resource attributes.
     #
     # Environment variable: OTEL_RESOURCE_ATTRIBUTES
@@ -35,7 +36,7 @@ sdk:
     # Environment variable: OTEL_ATTRIBUTE_COUNT_LIMIT
     attribute_count_limit: 128
   # Configure the tracer provider.
-  tracer_provider:
+  traces:
     # Span exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a span processor.
     exporters:
       # Configure the otlp exporter.
@@ -140,7 +141,7 @@ sdk:
           # Sets the exporter. Exporter must refer to a key in sdk.tracer_provider.exporters.
           #
           # Environment variable: OTEL_TRACES_EXPORTER
-          exporter: otlp
+          exporter: console
       # Add a batch span processor configured with zipkin exporter. For full description of options see sdk.tracer_provider.span_processors[0].
       - type: batch
         args:
@@ -228,7 +229,7 @@ sdk:
     # Set the sampler. Sampler must refer to a key in sdk.tracer_provider.sampler_config.
     sampler: parent_based
   # Configure the meter provider.
-  meter_provider:
+  metrics:
     # Metric exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a metric reader.
     exporters:
       # Configure the otlp exporter.
@@ -342,7 +343,7 @@ sdk:
             - key1
             - key2
   # Configure the logger provider.
-  logger_provider:
+  logs:
     # Log record exporters. Each exporter key refers to the type of the exporter. Values configure the exporter. Exporters must be associated with a log record processor.
     exporters:
       # Configure the otlp exporter.
