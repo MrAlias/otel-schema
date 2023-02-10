@@ -46,7 +46,11 @@ The working group proposes the use of [JSON Schema](https://json-schema.org/) as
 
 In order to provide a minimal API surface area, implementations *MUST* support the following methods.
 
-### ParseAndValidateConfigurationFromFile(filepath, format)
+### Configure(config)
+
+An API called `Configure` receives a configuration object. This method then applies the configuration object's details to the SDK. This method specifically applies the configuration object to allow for multiple configuration format providers to be supported in the future. This OTEP describes two such providers in a file and data structure formats below, but remote file formats *MAY* be implemented in the future.
+
+### ParseAndValidateConfigurationFromFile(filepath, format) -> config
 
 An API called `ParseAndValidateConfigurationFromFile` receives a string parameter indicating the file path containing the configuration to be parsed. An optional format parameter may be provided to indicate the format that this configuration uses. The default value for this parameter is `yaml`. The method returns a `Configuration` model that has been validated. This API *MAY* return an error or raise an exception, whichever is idiomatic to the implementation for the following reasons:
 
@@ -144,65 +148,9 @@ opentelemetry.ParseAndValidateConfiguration(
                     }
                 ],
             },
-            "meter_provider": {
-                "exporters": {
-                    "otlp": {
-                        "protocol": "http/protobuf",
-                        "endpoint": "http://localhost:4318/v1/metrics",
-                        "certificate": "/app/cert.pem",
-                        "client_key": "/app/cert.pem",
-                        "client_certificate": "/app/cert.pem",
-                        "headers": {
-                            "api-key": "1234",
-                        },
-                        "compression": "gzip",
-                        "timeout": 10000,
-                        "temporality_preference": "delta",
-                        "default_histogram_aggregation": "exponential_bucket_histogram",
-                    }
-                },
-                "metric_readers": [
-                    {
-                        "name": "periodic",
-                        "args": {
-                            "interval": 5000,
-                            "timeout": 30000,
-                            "exporter": "otlp",
-                        },
-                    }
-                ],
-            },
-            "logger_provider": {
-                "exporters": {
-                    "otlp": {
-                        "protocol": "http/protobuf",
-                        "endpoint": "http://localhost:4318/v1/logs",
-                        "certificate": "/app/cert.pem",
-                        "client_key": "/app/cert.pem",
-                        "client_certificate": "/app/cert.pem",
-                        "headers": {
-                            "api-key": "1234",
-                        },
-                        "compression": "gzip",
-                        "timeout": 10000,
-                    },
-                },
-                "log_record_processors": [
-                    {
-                        "name": "batch",
-                        "args": {
-                            "schedule_delay": 5000,
-                            "export_timeout": 30000,
-                            "max_queue_size": 2048,
-                            "max_export_batch_size": 512,
-                            "exporter": "otlp",
-                        },
-                    },
-                ],
-            },
-        },
-    }
-)
+            ...
+        }
+    })
 ```
 
 ### Go ParseAndValidateConfiguration example
@@ -239,68 +187,17 @@ otel.ParseAndValidateConfiguration(config{
           },
         },
       },
-      "meter_provider": config{
-        "exporters": config{
-          "otlp": config{
-            "protocol":           "http/protobuf",
-            "endpoint":           "http://localhost:4318/v1/metrics",
-            "certificate":        "/app/cert.pem",
-            "client_key":         "/app/cert.pem",
-            "client_certificate": "/app/cert.pem",
-            "headers": config{
-            	"api-key": "1234",
-            },
-            "compression":                   "gzip",
-            "timeout":                       10000,
-            "temporality_preference":        "delta",
-            "default_histogram_aggregation": "exponential_bucket_histogram",
-          },
-        },
-        "metric_readers": []config{
-          {
-            "name": "periodic",
-            "args": config{
-              "interval": 5000,
-              "timeout":  30000,
-              "exporter": "otlp",
-            },
-          },
-        },
-      },
-      "logger_provider": config{
-        "exporters": config{
-          "otlp": config{
-            "protocol":           "http/protobuf",
-            "endpoint":           "http://localhost:4318/v1/logs",
-            "certificate":        "/app/cert.pem",
-            "client_key":         "/app/cert.pem",
-            "client_certificate": "/app/cert.pem",
-            "headers": config{
-              "api-key": "1234",
-            },
-            "compression": "gzip",
-            "timeout":     10000,
-          },
-        },
-        "log_record_processors": []config{
-          {
-            "name": "batch",
-            "args": config{
-              "schedule_delay":        5000,
-              "export_timeout":        30000,
-              "max_queue_size":        2048,
-              "max_export_batch_size": 512,
-              "exporter":              "otlp",
-            },
-          },
-        },
-      },
+      ...
     },
   },
 )
 ```
 
-The configuration model *MUST* also be configurable via the use of a configuration file. The following demonstrates an example of a configuration file format (full example [here](https://github.com/MrAlias/otel-schema/blob/main/config.yaml)):
+### Configuration file
+
+The configuration model *MUST* also be configurable via the use of a configuration file. The working group proposes that all implementations *MUST* support JSON as a configuration file format, and *SHOULD* support YAML.
+
+The following demonstrates an example of a configuration file format (full example [here](https://github.com/MrAlias/otel-schema/blob/main/config.yaml)):
 
 ```yaml
 # include version specification in configuration files to help with parsing and schema evolution.
@@ -377,13 +274,20 @@ sdk:
   ...
 ```
 
-The working group proposes that all implementations *MUST* support JSON as a configuration file format, and *SHOULD* support YAML.
+## Trade-offs and mitigations
 
-## Trade-offs and mitigations (TBD)
+### Additional method to configure OpenTelemetry
 
-What are some (known!) drawbacks? What are some ways that they might be mitigated?
+If the implementation suggested in this OTEP goes ahead, users will be presented with another mechanism for configuring OpenTelemetry. This may cause confusion for users who are new to the project. It may be possible to mitigate the confusion by providing users with best practices and documentation.
 
-Note that mitigations do not need to be complete *solutions*, and that they do not need to be accomplished directly through your proposal. A suggested mitigation may even warrant its own OTEP!
+### Many ways to configure may result in users not knowing what is configured
+
+As there are multiple mechanisms for configuration, it's possible that the active configuration isn't what was expected. This could happen today, and one way it could be mitigated would be by providing a mechanism to list the active OpenTelemetry configuration.
+
+
+### Errors or difficulty in configuration files
+
+Configuration files provide an opportunity for misconfiguration. A way to mitigate this would be to provide clear messaging and fail quickly when misconfiguration occurs.
 
 ## Prior art and alternatives
 
@@ -452,6 +356,10 @@ pip install opentelemetry-instrumentation
 # NOTE: this parameter does not currently exist and would need to be added
 opentelemetry-instrument --config ./config.yaml ./python/app.py
 ```
+
+#### OpAmp
+
+The configuration may be used in the future in conjunction with the OpAmp protocol to make remote configuration of SDKs available as a feature supported by OpenTelemetry.
 
 ## Related Spec issues address
 
