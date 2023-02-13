@@ -1,6 +1,0 @@
-name: simple
-args:
-  exporter:
-    name: otlp
-    args:
-      endpoint: https://example.com:4317

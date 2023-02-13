@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$schema": "https://json-schema.org/draft-06/schema",
     "$ref": "#/definitions/OpenTelemetryConfiguration",
     "definitions": {
         "OpenTelemetryConfiguration": {
@@ -49,13 +49,7 @@
                 }
             },
             "required": [
-                "attribute_limits",
-                "disabled",
-                "logger_provider",
-                "meter_provider",
-                "propagators",
-                "resource",
-                "tracer_provider"
+                "disabled"
             ],
             "title": "SDK"
         },
@@ -118,7 +112,8 @@
             "additionalProperties": false,
             "properties": {
                 "protocol": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^(http|grpc)\\/(protobuf|json)"
                 },
                 "endpoint": {
                     "type": "string",
@@ -153,28 +148,14 @@
                 }
             },
             "required": [
-                "certificate",
-                "client_certificate",
-                "client_key",
-                "compression",
                 "endpoint",
-                "headers",
-                "protocol",
-                "timeout"
+                "protocol"
             ],
             "title": "Otlp"
         },
         "Headers": {
             "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "api-key": {
-                    "type": "integer"
-                }
-            },
-            "required": [
-                "api-key"
-            ],
+            "additionalProperties": true,
             "title": "Headers"
         },
         "Processor": {
@@ -391,7 +372,7 @@
                 "boundaries": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "number"
                     }
                 },
                 "record_min_max": {
@@ -423,7 +404,7 @@
         },
         "Attributes": {
             "type": "object",
-            "additionalProperties": false,
+            "additionalProperties": true,
             "properties": {
                 "service.name": {
                     "type": "string"
@@ -459,32 +440,24 @@
             },
             "required": [
                 "exporters",
-                "sampler",
-                "sampler_config",
-                "span_limits",
                 "span_processors"
             ],
             "title": "TracerProvider"
         },
         "TracerProviderExporters": {
             "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "otlp": {
+            "additionalProperties": true,
+            "patternProperties": {
+                "^otlp.*": {
                     "$ref": "#/definitions/Otlp"
                 },
-                "zipkin": {
+                "^zipkin.*": {
                     "$ref": "#/definitions/Zipkin"
                 },
-                "jaeger": {
+                "^jaeger.*": {
                     "$ref": "#/definitions/Jaeger"
                 }
             },
-            "required": [
-                "jaeger",
-                "otlp",
-                "zipkin"
-            ],
             "title": "TracerProviderExporters"
         },
         "Jaeger": {
@@ -492,7 +465,8 @@
             "additionalProperties": false,
             "properties": {
                 "protocol": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^http/thrift.binary$"
                 },
                 "endpoint": {
                     "type": "string",
