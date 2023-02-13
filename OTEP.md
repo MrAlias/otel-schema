@@ -29,7 +29,7 @@ Using a configuration model or configuration file, users can configure all optio
 * Broadly supported format. Ideally, the information encoded in the file can be decoded using native tools for all OpenTelemetry implementation languages. However, it must be possible for languages that do not natively support an encoding format to write their own parsers. This means that the file encoding format must be specified in a language agnostic form.
 * The configuration format must support structured data. At the minimum arrays and associative arrays.
 * The format must support at least null, boolean, string, double precision floating point (IEEE 754-1985), or signed 64 bit integer value types.
-* Custom span processors, exporters, samplers, or other user defined code can be configured using this format.
+* Custom span processors, exporters, samplers, or other user defined extension components can be configured using this format.
 * Configure SDK, but also configure instrumentation.
 * It needs to be able to version stability while evolving
 * The file format can be validated client side.
