@@ -3,10 +3,12 @@ plugins {
   application
 
   id("com.diffplug.spotless") version "6.9.0"
+  id("org.jsonschema2pojo") version "1.1.3"
 }
 
 spotless {
   java {
+    targetExclude("**/io/opentelemetry/fileconf/schema/*.*")
     googleJavaFormat()
   }
   kotlinGradle {
@@ -20,7 +22,8 @@ application {
 
 dependencies {
   implementation("org.yaml:snakeyaml:1.31")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.1")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.2")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
   implementation("com.networknt:json-schema-validator:1.0.76")
 
   testImplementation(platform("org.junit:junit-bom:5.9.1"))
@@ -28,6 +31,13 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation("org.assertj:assertj-core:3.23.1")
+}
+
+jsonSchema2Pojo {
+  sourceFiles = setOf(file(project.projectDir.parent.toString() + "/schema/schema.json"))
+
+  targetPackage = "io.opentelemetry.fileconf.schema"
+  includeSetters = false
 }
 
 tasks {

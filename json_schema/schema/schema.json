@@ -166,7 +166,7 @@
                     "type": "string"
                 },
                 "args": {
-                    "$ref": "#/definitions/LogRecordProcessorArgs"
+                    "$ref": "#/definitions/ProcessorArgs"
                 }
             },
             "required": [
@@ -175,7 +175,7 @@
             ],
             "title": "Processor"
         },
-        "LogRecordProcessorArgs": {
+        "ProcessorArgs": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -198,7 +198,7 @@
             "required": [
                 "exporter"
             ],
-            "title": "LogRecordProcessorArgs"
+            "title": "ProcessorArgs"
         },
         "MeterProvider": {
             "type": "object",
@@ -460,6 +460,17 @@
         "TracerProviderExporters": {
             "type": "object",
             "additionalProperties": true,
+            "properties": {
+                "otlp": {
+                    "$ref": "#/definitions/Otlp"
+                },
+                "zipkin": {
+                    "$ref": "#/definitions/Zipkin"
+                },
+                "jaeger": {
+                    "$ref": "#/definitions/Jaeger"
+                }
+            },
             "patternProperties": {
                 "^otlp.*": {
                     "$ref": "#/definitions/Otlp"

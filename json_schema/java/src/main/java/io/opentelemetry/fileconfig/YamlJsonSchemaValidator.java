@@ -2,6 +2,7 @@ package io.opentelemetry.fileconfig;
 
 import static java.util.stream.Collectors.toSet;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.networknt.schema.JsonMetaSchema;
@@ -53,6 +54,17 @@ class YamlJsonSchemaValidator {
       return jsonSchema.validate(MAPPER.readTree(yamlStr)).stream()
           .map(ValidationMessage::toString)
           .collect(toSet());
+    } catch (IOException e) {
+      throw new IllegalStateException("Unable to validate yaml", e);
+    }
+  }
+
+  <T> T parse(InputStream yaml, TypeReference<T> typeReference) {
+    // Load yaml and write it as string to resolve anchors
+    Object yamlObj = YAML.load(yaml);
+    try {
+      String yamlStr = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(yamlObj);
+      return MAPPER.readValue(yamlStr, typeReference);
     } catch (IOException e) {
       throw new IllegalStateException("Unable to parse yaml", e);
     }

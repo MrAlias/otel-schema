@@ -4,3 +4,5 @@ dependencyResolutionManagement {
     mavenLocal()
   }
 }
+
+rootProject.name = "json-schema-java"
