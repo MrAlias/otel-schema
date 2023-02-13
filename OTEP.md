@@ -274,6 +274,26 @@ sdk:
   ...
 ```
 
+### Version guarantees & backwards compatibility
+
+Each version of the configuration schema carries a major and minor version. Config files specify the major and minor version they adhere to. Before reaching 1.0, each minor version change is equivalent to major version change. That is, there are no guarantees about compatibility and all changes are permitted. As of 1.0, we provide the following stability guarantees:
+
+* For major version: No guarantees.
+* For minor versions:
+  * Property keys will not change. Although the addition of optional properties is permitted and the removal of properties is permitted, this MUST not be abused to rename property keys.
+  * Property value types will not change, except that integers MAY become floating points.
+  * No additional required properties.
+
+Allowable changes:
+
+* For major versions: All changes are permitted.
+* For minor versions:
+  * Addition of optional properties.
+  * Required property keys may become optional.
+  * Removal of properties, provided that the property key is not reused in the future.
+
+SDKs validating config files MUST fail when they encounter a config file with an unsupported version. Generally, this means fail when encountering a major version which is not recognized. An SDK might choose to maintain a library of validators / parsers for each major version, and use the config file version to select and use the correct instance. Differences in minor versions (except pre-1.0 minor versions) SHOULD be acceptable, with the caveat that allowable property additions and removals MAY result in configuration that is different than excepted.
+
 ## Trade-offs and mitigations
 
 ### Additional method to configure OpenTelemetry
@@ -283,7 +303,6 @@ If the implementation suggested in this OTEP goes ahead, users will be presented
 ### Many ways to configure may result in users not knowing what is configured
 
 As there are multiple mechanisms for configuration, it's possible that the active configuration isn't what was expected. This could happen today, and one way it could be mitigated would be by providing a mechanism to list the active OpenTelemetry configuration.
-
 
 ### Errors or difficulty in configuration files
 
@@ -310,7 +329,7 @@ In choosing to recommend JSON schema, the working group looked at the following 
 
 How does file configuration interact with environment variable configuration when both are present?
 
-* Solution 1: Ignore environment configuration when file configuration is present. Log a warning to the user indicating that multiple configuration modes were detected, but use the file configuration as the source of truth. 
+* Solution 1: Ignore environment configuration when file configuration is present. Log a warning to the user indicating that multiple configuration modes were detected, but use the file configuration as the source of truth.
 * Solution 2: Superimpose environment configuration on top of file configuration when both are present. One problem with this is that environment variable configuration doesn’t map to file configuration in an intuitive way. For example, OTEL_TRACES_EXPORTER defines a list of span exporters to be paired with a batch span processor configured by the OTEL_BSP_* variables. What do we do if the file config already contains one or more processors with an exporter specified in OTEL_TRACES_EXPORTER? Essentially, do we merge or append the environment variable configuration?
 
 ### How to handle no-code vs programmatic configuration?
@@ -318,12 +337,6 @@ How does file configuration interact with environment variable configuration whe
 How should the SDK be configured when both no-code configuration (either environment variable or file config) and programmatic configuration are present? NOTE: this question exists today with only the environment variable interface available.
 
 * Solution 1: Make it clear that interpretation of the environment shouldn’t be built into components. Instead, SDKs should have a component that explicitly interprets the environment and returns a configured instance of the SDK. This is how the java SDK works today and it nicely separates concerns.
-
-### How to handle deprecation/breaking changes to the config?
-
-How will breaking changes to the configuration be handled? What will the migration look like for users? Can it be consistent across implementations?
-
-* Solution 1: Major scheme version should be bumped for any backward incompatible changes. Implementations must be aware of the current version they support.
 
 ## Future possibilities
 
@@ -363,7 +376,7 @@ The configuration may be used in the future in conjunction with the OpAmp protoc
 
 ## Related Spec issues address
 
-* https://github.com/open-telemetry/opentelemetry-specification/issues/1773
-* https://github.com/open-telemetry/opentelemetry-specification/issues/2857
-* https://github.com/open-telemetry/opentelemetry-specification/issues/2746
-* https://github.com/open-telemetry/opentelemetry-specification/issues/2860
+* [https://github.com/open-telemetry/opentelemetry-specification/issues/1773](https://github.com/open-telemetry/opentelemetry-specification/issues/1773)
+* [https://github.com/open-telemetry/opentelemetry-specification/issues/2857](https://github.com/open-telemetry/opentelemetry-specification/issues/2857)
+* [https://github.com/open-telemetry/opentelemetry-specification/issues/2746](https://github.com/open-telemetry/opentelemetry-specification/issues/2746)
+* [https://github.com/open-telemetry/opentelemetry-specification/issues/2860](https://github.com/open-telemetry/opentelemetry-specification/issues/2860)
