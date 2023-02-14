@@ -32,7 +32,7 @@
                 "propagators": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Propagator"
+                        "type": "string"
                     }
                 },
                 "attribute_limits": {
@@ -162,7 +162,7 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "name": {
+                "type": {
                     "type": "string"
                 },
                 "args": {
@@ -171,7 +171,7 @@
             },
             "required": [
                 "args",
-                "name"
+                "type"
             ],
             "title": "Processor"
         },
@@ -231,7 +231,7 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "name": {
+                "type": {
                     "type": "string"
                 },
                 "args": {
@@ -240,7 +240,7 @@
             },
             "required": [
                 "args",
-                "name"
+                "type"
             ],
             "title": "MetricReader"
         },
@@ -352,7 +352,7 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "name": {
+                "type": {
                     "type": "string"
                 },
                 "args": {
@@ -361,7 +361,7 @@
             },
             "required": [
                 "args",
-                "name"
+                "type"
             ],
             "title": "Aggregation"
         },
@@ -388,19 +388,6 @@
                 "record_min_max"
             ],
             "title": "AggregationArgs"
-        },
-        "Propagator": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "name": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "name"
-            ],
-            "title": "Propagator"
         },
         "Resource": {
             "type": "object",

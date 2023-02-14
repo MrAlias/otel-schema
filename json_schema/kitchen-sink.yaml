@@ -23,14 +23,7 @@ sdk:
   # Configure context propagators. Each propagator has a name and args used to configure it. None of the propagators here have configurable options so args is not demonstrated.
   #
   # Environment variable: OTEL_PROPAGATORS
-  propagators:
-    - name: tracecontext
-    - name: baggage
-    - name: b3
-    - name: b3multi
-    - name: b3multijaeger
-    - name: xray
-    - name: ottrace
+  propagators: [tracecontext, baggage, b3multi]
   # Configure general attribute limits. See also sdk.tracer_provider.span_limits, sdk.logger_provider.log_record_limits.
   attribute_limits:
     # Set the max attribute value size.
@@ -127,7 +120,7 @@ sdk:
       # Add a batch span processor.
       #
       # Environment variable: OTEL_BSP_*, OTEL_TRACES_EXPORTER
-      - name: batch
+      - type: batch
         # Configure the batch span processor.
         args:
           # Sets the delay interval between two consecutive exports.
@@ -151,11 +144,11 @@ sdk:
           # Environment variable: OTEL_TRACES_EXPORTER
           exporter: otlp
       # Add a batch span processor configured with zipkin exporter. For full description of options see sdk.tracer_provider.span_processors[0].
-      - name: batch
+      - type: batch
         args:
           exporter: zipkin
       # Add a batch span processor configured with jaeger exporter. For full description of options see sdk.tracer_provider.span_processors[0].
-      - name: batch
+      - type: batch
         args:
           exporter: jaeger
     # Configure the span limits. See also sdk.attribute_limits.
@@ -283,12 +276,12 @@ sdk:
         #
         # Environment variable: OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
         default_histogram_aggregation: exponential_bucket_histogram
-    # List of metric readers. Each metric reader has a name and args used to configure it.
+    # List of metric readers. Each metric reader has a type and args used to configure it.
     metric_readers:
       # Add a periodic metric reader.
       #
       # Environment variable: OTEL_METRICS_EXPORT_*, OTEL_METRICS_EXPORTER
-      - name: periodic
+      - type: periodic
         args:
           # Sets delay interval between the start of two consecutive export attempts.
           #
@@ -305,7 +298,7 @@ sdk:
       # Add a prometheus metric reader. Some languages SDKs may implement this as a metric exporter.
       #
       # Environment variable: OTEL_METRICS_EXPORTER=prometheus
-      - name: prometheus
+      - type: prometheus
         args:
           # Set the host used to serve metrics in the prometheus format.
           #
@@ -334,10 +327,10 @@ sdk:
           name: new_instrument_name
           # Set the description of resulting metric(s).
           description: new_description
-          # Set the aggregation of resulting metric(s). Aggregation has a name an args used to configure it.
+          # Set the aggregation of resulting metric(s). Aggregation has a type an args used to configure it.
           aggregation:
-            # Set the aggregation name. Options include: default, drop, sum, last_value, explicit_bucket_histogram, exponential_bucket_histogram.
-            name: explicit_bucket_histogram
+            # Set the aggregation type. Options include: default, drop, sum, last_value, explicit_bucket_histogram, exponential_bucket_histogram.
+            type: explicit_bucket_histogram
             # Configure the aggregation.
             args:
               # Set the bucket boundaries. Applicable when aggregation is explicit_bucket_histogram.
@@ -389,12 +382,12 @@ sdk:
         #
         # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
         timeout: 10000
-    # List of log record processors. Each log record processor has a name and args used to configure it.
+    # List of log record processors. Each log record processor has a type and args used to configure it.
     log_record_processors:
       # Add a batch log record processor.
       #
       # Environment variable: OTEL_BLRP_*, OTEL_LOGS_EXPORTER
-      - name: batch
+      - type: batch
         # Configure the batch log record processor.
         args:
           # Sets the delay interval between two consecutive exports.
