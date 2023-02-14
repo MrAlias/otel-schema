@@ -17,7 +17,7 @@ func main() {
 	}
 	jsonSchema := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", path))
 
-	buf, err := ioutil.ReadFile("../kitchen-sink.yaml")
+	buf, err := ioutil.ReadFile("../../config.yaml")
 	if err != nil {
 		panic(err.Error())
 	}

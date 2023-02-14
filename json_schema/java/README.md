@@ -5,5 +5,5 @@
 export SCHEMA_FILE=/Users/jberg/code/rAlias/otel-schema/json_schema/schema/schema.json
 
 // Run the validation, passing the location of the file to validate
-./gradlew run --args="/Users/jberg/code/rAlias/otel-schema/json_schema/kitchen-sink.yaml"
+./gradlew run --args="/Users/jberg/code/rAlias/otel-schema/config.yaml"
 ```
