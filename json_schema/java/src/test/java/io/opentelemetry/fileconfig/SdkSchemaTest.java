@@ -15,7 +15,7 @@ class SdkSchemaTest {
         new YamlJsonSchemaValidator(new File(System.getenv("SCHEMA_FILE")));
 
     FileInputStream fis =
-        new FileInputStream(System.getenv("REPO_DIR") + "/json_schema/kitchen-sink.yaml");
+        new FileInputStream(System.getenv("REPO_DIR") + "/config.yaml");
 
     // Validate example kitchen-sink file in base of repository
     assertThat(validator.validate(fis)).isEmpty();

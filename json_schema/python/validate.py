@@ -11,7 +11,7 @@ resolver = validators.RefResolver(
     referrer=True,
 )
 
-config_file = "../kitchen-sink.yaml"
+config_file = "../../config.yaml"
 print(f"Using config file: {config_file}")
 with open(config_file, "r") as stream:
     try:
