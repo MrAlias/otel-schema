@@ -1,6 +1,8 @@
 
-import importlib
 import logging
+from typing import List, Sequence, Tuple
+from pkg_resources import iter_entry_points
+
 
 import yaml
 from pathlib import Path
@@ -8,7 +10,23 @@ from jsonschema import validate, validators
 from jsonschema.exceptions import ValidationError
 
 from opentelemetry.trace import set_tracer_provider
+from opentelemetry.sdk.trace.export import SpanExporter
 
+
+# borromed from opentelemetry/sdk/_configuration
+def _import_config_component(
+    selected_component: str, entry_point_name: str
+) -> object:
+    component_entry_points = {
+        ep.name: ep for ep in iter_entry_points(entry_point_name)
+    }
+    entry_point = component_entry_points.get(selected_component, None)
+    if not entry_point:
+        raise RuntimeError(
+            f"Requested component '{selected_component}' not found in entry points for '{entry_point_name}'"
+        )
+
+    return entry_point.load()
 
 class Config:
     def __init__(self, config=None) -> None:
@@ -20,46 +38,15 @@ class Config:
         from opentelemetry.sdk.resources import Resource
         return Resource.create(self._config.get("sdk").get("resource").get("attributes"))
 
-    # _get_exporter returns a configured span
-    def _get_exporter(self, signal, name):
-        if name not in self._config.get("sdk").get(signal).get("exporters"):
-            raise Exception(f"exporter {name} not specified for {signal} signal")
+    # _get_exporter returns an exporter class for the signal
+    def _get_exporter(self, signal: str, name: str):
+        # if name not in self._config.get("sdk").get(signal).get("exporters"):
+        #     raise Exception(f"exporter {name} not specified for {signal} signal")
         
-        # TODO: replace to use entrypoints
-        _KNOWN_TRACE_EXPORTER_MAP = {
-            "traces": {
-                "console": {
-                    "pkg": "opentelemetry.sdk.trace.export",
-                    "class": "ConsoleSpanExporter",
-                },
-                "jaeger": {
-                    "pkg": "opentelemetry.exporter.jaeger.thrift",
-                    "class": "JaegerExporter",
-                },
-                "zipkin": {
-                    "pkg": "opentelemetry.exporter.zipkin.json",
-                    "class": "ZipkinExporter",
-                },
-            },
-            "metrics": {
-                "console": {
-                    "pkg": "opentelemetry.sdk.metrics.export",
-                    "class": "ConsoleExporter",
-                },
-            },
-            "logs": {
-                "console": {
-                    "pkg": "opentelemetry.sdk.logs.export",
-                    "class": "ConsoleExporter",
-                },
-            }
-        }
-        # look for known exporters
-        if name in _KNOWN_TRACE_EXPORTER_MAP.get(signal):
-            mod = importlib.__import__(_KNOWN_TRACE_EXPORTER_MAP.get(signal).get(name).get("pkg"), fromlist=[_KNOWN_TRACE_EXPORTER_MAP.get(signal).get(name).get("class")])
-            _cls = getattr(mod, _KNOWN_TRACE_EXPORTER_MAP.get(signal).get(name).get("class"))
-            return _cls()
-        # handle case where a custom exporter is used
+        exporter = _import_config_component(name, f"opentelemetry_{signal}_exporter")
+        if issubclass(exporter, SpanExporter):
+            return exporter
+        raise RuntimeError(f"{name} is not a {signal} exporter")
 
     def set_tracer_provider(self):
         from opentelemetry.sdk.trace import TracerProvider
@@ -69,7 +56,8 @@ class Config:
         for processor in self._config.get("sdk").get("traces").get("span_processors"):
             logging.debug("adding span processor %s", processor)
             try:
-                processor = BatchSpanProcessor(self._get_exporter("traces", self._config.get("sdk").get("traces").get("span_processors").get(processor).get("args").get("exporter")))
+                # TODO: pass in exporter arguments
+                processor = BatchSpanProcessor(self._get_exporter("traces", processor.get("args").get("exporter"))())
                 provider.add_span_processor(processor)
             except ModuleNotFoundError as exc:
                 logging.error("module not found", exc)
