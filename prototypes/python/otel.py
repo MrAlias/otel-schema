@@ -40,12 +40,12 @@ class Config:
 
     # _get_exporter returns an exporter class for the signal
     def _get_exporter(self, signal: str, name: str):
-        # if name not in self._config.get("sdk").get(signal).get("exporters"):
-        #     raise Exception(f"exporter {name} not specified for {signal} signal")
+        if name not in self._config.get("sdk").get(signal).get("exporters"):
+            raise Exception(f"exporter {name} not specified for {signal} signal")
         
         exporter = _import_config_component(name, f"opentelemetry_{signal}_exporter")
         if issubclass(exporter, SpanExporter):
-            return exporter
+            return exporter(**self._config.get("sdk").get(signal).get("exporters").get(name))
         raise RuntimeError(f"{name} is not a {signal} exporter")
 
     def set_tracer_provider(self):
@@ -57,7 +57,7 @@ class Config:
             logging.debug("adding span processor %s", processor)
             try:
                 # TODO: pass in exporter arguments
-                processor = BatchSpanProcessor(self._get_exporter("traces", processor.get("args").get("exporter"))())
+                processor = BatchSpanProcessor(self._get_exporter("traces", processor.get("args").get("exporter")))
                 provider.add_span_processor(processor)
             except ModuleNotFoundError as exc:
                 logging.error("module not found", exc)

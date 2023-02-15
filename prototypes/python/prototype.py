@@ -15,8 +15,8 @@ def main():
     tracer = get_tracer("config-prototype")
 
     with tracer.start_as_current_span("operation-a"):
-        with tracer.start_as_current_span("operation-a"):
-            with tracer.start_as_current_span("operation-a"):
+        with tracer.start_as_current_span("operation-b"):
+            with tracer.start_as_current_span("operation-c"):
                 logging.debug("you should see traces after this line")
 
 main()
