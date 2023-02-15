@@ -145,11 +145,13 @@
                 },
                 "default_histogram_aggregation": {
                     "type": "string"
+                },
+                "insecure": {
+                    "type": "boolean"
                 }
             },
             "required": [
-                "endpoint",
-                "protocol"
+                "endpoint"
             ],
             "title": "Otlp"
         },
