@@ -32,7 +32,7 @@ Using a configuration model or configuration file, users can configure all optio
 * Custom span processors, exporters, samplers, or other user defined extension components can be configured using this format.
 * Configure SDK, but also configure instrumentation.
 * It needs to be able to version stability while evolving
-* The file format can be validated client side.
+* The configuration can be validated client side.
 
 ## Internal details
 
@@ -195,7 +195,7 @@ otel.ParseAndValidateConfiguration(config{
 
 ### Configuration file
 
-The configuration model *MUST* also be configurable via the use of a configuration file. The working group proposes that all implementations *MUST* support JSON as a configuration file format, and *SHOULD* support YAML.
+The configuration model *MUST* also be configurable via the use of a configuration file. The working group proposes that all implementations *MUST* support JSON as a configuration file format, and *SHOULD* support YAML. A goal of supporting configuration files should be to support variable substitution to give users the option to avoid storing sensitive configuration in these files.
 
 The following demonstrates an example of a configuration file format (full example [here](https://github.com/MrAlias/otel-schema/blob/main/config.yaml)):
 
@@ -276,7 +276,7 @@ sdk:
 
 ### Version guarantees & backwards compatibility
 
-Each version of the configuration schema carries a major and minor version. Config files specify the major and minor version they adhere to. Before reaching 1.0, each minor version change is equivalent to major version change. That is, there are no guarantees about compatibility and all changes are permitted. As of 1.0, we provide the following stability guarantees:
+Each version of the configuration schema carries a major and minor version. Configurations specify the major and minor version they adhere to. Before reaching 1.0, each minor version change is equivalent to major version change. That is, there are no guarantees about compatibility and all changes are permitted. As of 1.0, we provide the following stability guarantees:
 
 * For major version: No guarantees.
 * For minor versions:
@@ -292,7 +292,7 @@ Allowable changes:
   * Required property keys may become optional.
   * Removal of properties, provided that the property key is not reused in the future.
 
-SDKs validating config files MUST fail when they encounter a config file with an unsupported version. Generally, this means fail when encountering a major version which is not recognized. An SDK might choose to maintain a library of validators / parsers for each major version, and use the config file version to select and use the correct instance. Differences in minor versions (except pre-1.0 minor versions) SHOULD be acceptable, with the caveat that allowable property additions and removals MAY result in configuration that is different than excepted.
+SDKs validating configuration MUST fail when they encounter a configuration with an unsupported version. Generally, this means fail when encountering a major version which is not recognized. An SDK might choose to maintain a library of validators / parsers for each major version, and use the configuration version to select and use the correct instance. Differences in minor versions (except pre-1.0 minor versions) SHOULD be acceptable, with the caveat that allowable property additions and removals MAY result in configuration that is different than excepted.
 
 ## Trade-offs and mitigations
 
@@ -311,6 +311,10 @@ Configuration files provide an opportunity for misconfiguration. A way to mitiga
 ## Prior art and alternatives
 
 The working group looked to the OpenTelemetry Collector and OpenTelemetry Operator for inspiration and guidance.
+
+## Configuration through environment variables supports runtime replacement of variables, would file based configuration require users to hardcode potentially sensitive values?
+
+Hardcoding secrets in files is never a good idea. To address this 
 
 ### Alternative schema languages
 
