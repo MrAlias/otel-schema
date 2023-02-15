@@ -8,7 +8,6 @@ from opentelemetry.trace import get_tracer
 import otel
 
 
-
 def main():
     logging.basicConfig(level=logging.DEBUG)
     otel.configure(otel.parse_and_validate_from_config_file(sys.argv[1], sys.argv[2]))
