@@ -78,7 +78,7 @@
                     "$ref": "#/definitions/LoggerProviderExporters"
                 },
                 "log_record_processors": {
-                    "type": "object",
+                    "type": "array",
                     "items": {
                         "$ref": "#/definitions/Processor"
                     }
@@ -423,7 +423,7 @@
                     "$ref": "#/definitions/TracerProviderExporters"
                 },
                 "span_processors": {
-                    "type": "object",
+                    "type": "array",
                     "items": {
                         "$ref": "#/definitions/Processor"
                     }
