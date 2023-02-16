@@ -52,7 +52,7 @@ An API called `Configure` receives a configuration object. This method then appl
 
 ### ParseAndValidateConfigurationFromFile(filepath, format) -> config
 
-An API called `ParseAndValidateConfigurationFromFile` receives a string parameter indicating the file path containing the configuration to be parsed. An optional format parameter may be provided to indicate the format that this configuration uses. The default value for this parameter is `yaml`. The method returns a `Configuration` model that has been validated. This API *MAY* return an error or raise an exception, whichever is idiomatic to the implementation for the following reasons:
+An API called `ParseAndValidateConfigurationFromFile` receives a string parameter indicating the file path containing the configuration to be parsed. An optional format parameter may be provided to indicate the format that this configuration uses. The default value for this parameter is `json`. The method returns a `Configuration` model that has been validated. This API *MAY* return an error or raise an exception, whichever is idiomatic to the implementation for the following reasons:
 
 * file doesn't exist or is invalid
 * configuration parsed is invalid
@@ -61,7 +61,7 @@ An API called `ParseAndValidateConfigurationFromFile` receives a string paramete
 
 ```python
 
-filename = "./config.yaml"
+filename = "./config.json"
 
 try:
   cfg = opentelemetry.ParseAndValidateConfigurationFromFile(filename)
@@ -81,14 +81,14 @@ except Exception as e:
 
 ```go
 
-filename := "./config.yaml"
+filename := "./config.json"
 cfg, err := otel.ParseAndValidateConfigurationFromFile(filename)
 if err != nil {
   return err
 }
 
-filename := "./config.json"
-cfg, err := otel.ParseAndValidateConfigurationFromFile(filename, otelconfig.WithFormat("json"))
+filename := "./config.yaml"
+cfg, err := otel.ParseAndValidateConfigurationFromFile(filename, otelconfig.WithFormat("yaml"))
 if err != nil {
   return err
 }
