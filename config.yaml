@@ -47,7 +47,7 @@ sdk:
         # Sets the endpoint.
         #
         # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-        endpoint: http://localhost:4318/v1/metrics
+        endpoint: http://localhost:4318/v1/traces
         # Sets the certificate.
         #
         # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
