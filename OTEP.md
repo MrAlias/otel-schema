@@ -108,8 +108,6 @@ To allow SDKs and instrumentation libraries to parse configuration without havin
 * has already been parsed from a file or data structure
 * has been validated
 
-(TBD what methods should this configuration model make available for SDKs/instrumentations?)
-
 ### Additional interface: ParseAndValidateConfiguration
 
 Each language implementation supporting OpenTelemetry *MAY* support parsing a data structure instead of a file to produce a model. This allows implementations to provide a configuration interface without the expectation on users to parse a configuration file. The following demonstrates how Python and Go may provide a configuration interface to accomplish this:
