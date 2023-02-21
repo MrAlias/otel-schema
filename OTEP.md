@@ -31,8 +31,8 @@ Using a configuration model or configuration file, users can configure all optio
 * The format must support at least null, boolean, string, double precision floating point (IEEE 754-1985), or signed 64 bit integer value types.
 * Custom span processors, exporters, samplers, or other user defined extension components can be configured using this format.
 * Configure SDK, but also configure instrumentation.
-* It needs to be able to version stability while evolving
-* The configuration can be validated client side.
+* Must offer stability guarantees while supporting evolution
+* The structure of the configuration can be validated via a schema.
 * Support environment variable substitution to give users the option to avoid storing secrets in these files.
 
 ## Internal details
@@ -53,7 +53,7 @@ An API called `Configure` receives a configuration object. This method then appl
 
 ### ParseAndValidateConfigurationFromFile(filepath, format) -> config
 
-An API called `ParseAndValidateConfigurationFromFile` receives a string parameter indicating the file path containing the configuration to be parsed. An optional format parameter may be provided to indicate the format that this configuration uses. The default value for this parameter is `json`. The method returns a `Configuration` model that has been validated. This API *MAY* return an error or raise an exception, whichever is idiomatic to the implementation for the following reasons:
+An API called `ParseAndValidateConfigurationFromFile` receives a string parameter indicating the file path containing the configuration to be parsed. An optional format parameter may be provided to indicate the format that this configuration uses. YAML *SHOULD* be supported, but JSON, which is a strict subset of YAML, *MAY* be supported if a language ecosystem has good reason. The method returns a `Configuration` model that has been validated. This API *MAY* return an error or raise an exception, whichever is idiomatic to the implementation for the following reasons:
 
 * file doesn't exist or is invalid
 * configuration parsed is invalid
@@ -62,17 +62,17 @@ An API called `ParseAndValidateConfigurationFromFile` receives a string paramete
 
 ```python
 
-filename = "./config.json"
+filename = "./config.yaml"
 
 try:
   cfg = opentelemetry.ParseAndValidateConfigurationFromFile(filename)
 except Exception as e:
   print(e)
 
-filename = "./config.ini"
+filename = "./config.json"
 
 try:
-  cfg = opentelemetry.ParseAndValidateConfigurationFromFile(filename, format="ini")
+  cfg = opentelemetry.ParseAndValidateConfigurationFromFile(filename, format="json")
 except Exception as e:
   raise e
 
@@ -82,14 +82,14 @@ except Exception as e:
 
 ```go
 
-filename := "./config.json"
+filename := "./config.yaml"
 cfg, err := otel.ParseAndValidateConfigurationFromFile(filename)
 if err != nil {
   return err
 }
 
-filename := "./config.yaml"
-cfg, err := otel.ParseAndValidateConfigurationFromFile(filename, otelconfig.WithFormat("yaml"))
+filename := "./config.json"
+cfg, err := otel.ParseAndValidateConfigurationFromFile(filename, otelconfig.WithFormat("json"))
 if err != nil {
   return err
 }
