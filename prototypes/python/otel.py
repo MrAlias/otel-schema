@@ -9,8 +9,10 @@ from pathlib import Path
 from jsonschema import validate, validators
 from jsonschema.exceptions import ValidationError
 
+from opentelemetry.metrics import set_meter_provider
 from opentelemetry.trace import set_tracer_provider
 from opentelemetry.sdk.trace.export import SpanExporter
+from opentelemetry.sdk.metrics.export import MetricExporter
 
 
 # borromed from opentelemetry/sdk/_configuration
@@ -44,35 +46,53 @@ class Config:
             raise Exception(f"exporter {name} not specified for {signal} signal")
         
         exporter = _import_config_component(name, f"opentelemetry_{signal}_exporter")
-        if issubclass(exporter, SpanExporter):
-            return exporter(**self._config.get("sdk").get(signal).get("exporters").get(name))
+        if signal == "metrics":
+            cls_type = MetricExporter
+        elif signal == "traces":
+            cls_type = SpanExporter
+        elif signal == "logs":
+            cls_type = SpanExporter
+        if issubclass(exporter, cls_type):
+            if self._config.get("sdk").get(signal).get("exporters").get(name) is not None:
+                return exporter(**self._config.get("sdk").get(signal).get("exporters").get(name))
+            return exporter()
         raise RuntimeError(f"{name} is not a {signal} exporter")
 
-    def set_tracer_provider(self):
+    def configure_tracing(self, cfg):
+        if cfg is None:
+            return
         from opentelemetry.sdk.trace import TracerProvider
         provider = TracerProvider(resource=self._resource())
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-        for processor in self._config.get("sdk").get("traces").get("span_processors"):
+        for processor in cfg.get("span_processors"):
             logging.debug("adding span processor %s", processor)
             try:
-                # TODO: pass in exporter arguments
                 processor = BatchSpanProcessor(self._get_exporter("traces", processor.get("args").get("exporter")))
                 provider.add_span_processor(processor)
             except ModuleNotFoundError as exc:
                 logging.error("module not found", exc)
         set_tracer_provider(provider)
 
-    def set_meter_provider(self):
-        pass
+    def configure_metrics(self, cfg):
+        if cfg is None:
+            return
+        from opentelemetry.sdk.metrics import MeterProvider
+        readers = []
+        for reader in cfg.get("metric_readers"):
+            if reader.get("type") == "periodic":
+                from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+                readers.append(PeriodicExportingMetricReader(self._get_exporter("metrics", reader.get("args").get("exporter"))))
+        provider = MeterProvider(resource=self._resource(), metric_readers=readers)
+        set_meter_provider(provider)
 
     def apply(self):
         logging.debug("applying configuration %s", self._config)
         if self._config is None or self._config.get("sdk").get("disabled"):
             logging.debug("sdk disabled, nothing to apply")
             return
-        self.set_tracer_provider()
-        self.set_meter_provider()
+        self.configure_tracing(self._config.get("sdk").get("traces"))
+        self.configure_metrics(self._config.get("sdk").get("metrics"))
 
 
 NoOpConfig = Config()
