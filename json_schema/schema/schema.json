@@ -96,15 +96,12 @@
         },
         "LoggerProviderExporters": {
             "type": "object",
-            "additionalProperties": false,
+            "additionalProperties": true,
             "properties": {
                 "otlp": {
                     "$ref": "#/definitions/Otlp"
                 }
             },
-            "required": [
-                "otlp"
-            ],
             "title": "LoggerProviderExporters"
         },
         "Otlp": {

@@ -114,6 +114,7 @@ sdk:
         #
         # Environment variable: OTEL_EXPORTER_JAEGER_AGENT_HOST
         agent_port: 6832
+      console:
     # List of span processors. Each span processor has a type and args used to configure it.
     span_processors:
       # Add a batch span processor.
@@ -143,13 +144,13 @@ sdk:
           # Environment variable: OTEL_TRACES_EXPORTER
           exporter: console
       # Add a batch span processor configured with zipkin exporter. For full description of options see sdk.tracer_provider.span_processors[0].
-      - type: batch
-        args:
-          exporter: zipkin
-      # Add a batch span processor configured with jaeger exporter. For full description of options see sdk.tracer_provider.span_processors[0].
-      - type: batch
-        args:
-          exporter: jaeger
+      # - type: batch
+      #   args:
+      #     exporter: zipkin
+      # # Add a batch span processor configured with jaeger exporter. For full description of options see sdk.tracer_provider.span_processors[0].
+      # - type: batch
+      #   args:
+      #     exporter: jaeger
     # Configure the span limits. See also sdk.attribute_limits.
     span_limits:
       # Set the max span attribute value size. Overrides sdk.attribute_limits.attribute_value_length_limit.
@@ -275,6 +276,7 @@ sdk:
         #
         # Environment variable: OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
         default_histogram_aggregation: exponential_bucket_histogram
+      console:
     # List of metric readers. Each metric reader has a type and args used to configure it.
     metric_readers:
       # Add a periodic metric reader.
@@ -293,7 +295,7 @@ sdk:
           # Sets the exporter. Exporter must refer to a key in sdk.meter_provider.exporters.
           #
           # Environment variable: OTEL_METRICS_EXPORTER
-          exporter: otlp
+          exporter: console
       # Add a prometheus metric reader. Some languages SDKs may implement this as a metric exporter.
       #
       # Environment variable: OTEL_METRICS_EXPORTER=prometheus
