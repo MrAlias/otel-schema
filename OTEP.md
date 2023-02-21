@@ -33,6 +33,7 @@ Using a configuration model or configuration file, users can configure all optio
 * Configure SDK, but also configure instrumentation.
 * It needs to be able to version stability while evolving
 * The configuration can be validated client side.
+* Support environment variable substitution to give users the option to avoid storing secrets in these files.
 
 ## Internal details
 
@@ -193,7 +194,7 @@ otel.ParseAndValidateConfiguration(config{
 
 ### Configuration file
 
-The configuration model *MUST* also be configurable via the use of a configuration file. The working group proposes that all implementations *MUST* support JSON as a configuration file format, and *SHOULD* support YAML. A goal of supporting configuration files should be to support variable substitution to give users the option to avoid storing sensitive configuration in these files.
+The configuration model *MUST* also be configurable via the use of a configuration file. The working group proposes that all implementations *MUST* support JSON as a configuration file format, and *SHOULD* support YAML.
 
 The following demonstrates an example of a configuration file format (full example [here](https://github.com/MrAlias/otel-schema/blob/main/config.yaml)):
 
@@ -238,8 +239,6 @@ sdk:
         #
         # Environment variable: OTEL_EXPORTER_ZIPKIN_TIMEOUT
         timeout: 10000
-      # TODO: OTLP exporter configuration.
-      # TODO: Jaeger exporter configuration.
     # List of span processors. Each span processor has a name and args used to configure it.
     span_processors:
       # Add a batch span processor.
@@ -271,6 +270,38 @@ sdk:
   # Configure the meter provider.
   ...
 ```
+
+### Environment variable substitution
+
+Configuration files MUST support environment variable expansion. While this accommodates the scenario in which a configuration file needs to reference sensitive data and is not able to be stored securely, environment variable expansion is not limited to sensitive data.
+
+The syntax for environment variable expansion mirrors the [collector](https://opentelemetry.io/docs/collector/configuration/#configuration-environment-variables).
+
+For example, given an environment where `API_KEY=1234`, the configuration file contents:
+```
+scheme_version: 0.1
+sdk:
+  tracer_provider:
+    exporters:
+      otlp:
+        endpoint: https://example.host:4317/v1/traces
+        headers:
+          api-key: ${env:API_KEY}
+```
+
+Result in the following after substitution:
+```
+scheme_version: 0.1
+sdk:
+  tracer_provider:
+    exporters:
+      otlp:
+        endpoint: https://example.host:4317/v1/traces
+        headers:
+          api-key: 1234
+```
+
+Implementations MUST perform environment variable substitution before validating and parsing configuration file contents.
 
 ### Version guarantees & backwards compatibility
 
