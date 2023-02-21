@@ -33,6 +33,7 @@ Using a configuration model or configuration file, users can configure all optio
 * Configure SDK, but also configure instrumentation.
 * Must offer stability guarantees while supporting evolution
 * The structure of the configuration can be validated via a schema.
+* Support environment variable substitution to give users the option to avoid storing secrets in these files.
 
 ## Internal details
 
@@ -193,7 +194,7 @@ otel.ParseAndValidateConfiguration(config{
 
 ### Configuration file
 
-The configuration model *MUST* also be configurable via the use of a configuration file. The working group proposes that all implementations *MUST* support JSON as a configuration file format, and *SHOULD* support YAML. A goal of supporting configuration files should be to support variable substitution to give users the option to avoid storing sensitive configuration in these files.
+The configuration model *MUST* also be configurable via the use of a configuration file. The working group proposes that all implementations *MUST* support JSON as a configuration file format, and *SHOULD* support YAML.
 
 The following demonstrates an example of a configuration file format (full example [here](https://github.com/MrAlias/otel-schema/blob/main/config.yaml)):
 
@@ -238,8 +239,6 @@ sdk:
         #
         # Environment variable: OTEL_EXPORTER_ZIPKIN_TIMEOUT
         timeout: 10000
-      # TODO: OTLP exporter configuration.
-      # TODO: Jaeger exporter configuration.
     # List of span processors. Each span processor has a name and args used to configure it.
     span_processors:
       # Add a batch span processor.
@@ -272,13 +271,45 @@ sdk:
   ...
 ```
 
+### Environment variable substitution
+
+Configuration files *MUST* support environment variable expansion. While this accommodates the scenario in which a configuration file needs to reference sensitive data and is not able to be stored securely, environment variable expansion is not limited to sensitive data.
+
+The syntax for environment variable expansion mirrors the [collector](https://opentelemetry.io/docs/collector/configuration/#configuration-environment-variables).
+
+For example, given an environment where `API_KEY=1234`, the configuration file contents:
+```
+scheme_version: 0.1
+sdk:
+  tracer_provider:
+    exporters:
+      otlp:
+        endpoint: https://example.host:4317/v1/traces
+        headers:
+          api-key: ${env:API_KEY}
+```
+
+Result in the following after substitution:
+```
+scheme_version: 0.1
+sdk:
+  tracer_provider:
+    exporters:
+      otlp:
+        endpoint: https://example.host:4317/v1/traces
+        headers:
+          api-key: 1234
+```
+
+Implementations *MUST* perform environment variable substitution before validating and parsing configuration file contents.
+
 ### Version guarantees & backwards compatibility
 
 Each version of the configuration schema carries a major and minor version. Configurations specify the major and minor version they adhere to. Before reaching 1.0, each minor version change is equivalent to major version change. That is, there are no guarantees about compatibility and all changes are permitted. As of 1.0, we provide the following stability guarantees:
 
 * For major version: No guarantees.
 * For minor versions:
-  * Property keys will not change. Although the addition of optional properties is permitted and the removal of properties is permitted, this MUST not be abused to rename property keys.
+  * Property keys will not change. Although the addition of optional properties is permitted and the removal of properties is permitted, this *MUST* not be abused to rename property keys.
   * Property value types will not change, except that integers MAY become floating points.
   * No additional required properties.
 
@@ -290,7 +321,7 @@ Allowable changes:
   * Required property keys may become optional.
   * Removal of properties, provided that the property key is not reused in the future.
 
-SDKs validating configuration MUST fail when they encounter a configuration with an unsupported version. Generally, this means fail when encountering a major version which is not recognized. An SDK might choose to maintain a library of validators / parsers for each major version, and use the configuration version to select and use the correct instance. Differences in minor versions (except pre-1.0 minor versions) SHOULD be acceptable, with the caveat that allowable property additions and removals MAY result in configuration that is different than excepted.
+SDKs validating configuration *MUST* fail when they encounter a configuration with an unsupported version. Generally, this means fail when encountering a major version which is not recognized. An SDK might choose to maintain a library of validators / parsers for each major version, and use the configuration version to select and use the correct instance. Differences in minor versions (except pre-1.0 minor versions) SHOULD be acceptable, with the caveat that allowable property additions and removals MAY result in configuration that is different than excepted.
 
 ## Trade-offs and mitigations
 
