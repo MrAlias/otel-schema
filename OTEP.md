@@ -194,8 +194,6 @@ otel.ParseAndValidateConfiguration(config{
 
 ### Configuration file
 
-The configuration model *MUST* also be configurable via the use of a configuration file. The working group proposes that all implementations *SHOULD* support YAML as a configuration file format, and *MAY* support JSON.
-
 The following demonstrates an example of a configuration file format (full example [here](https://github.com/MrAlias/otel-schema/blob/main/config.yaml)):
 
 ```yaml
