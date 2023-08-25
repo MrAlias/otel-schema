@@ -1,5 +1,5 @@
 from yaml import safe_load, YAMLError
-from logging import debug, error
+from logging import debug, error, getLogger
 from pkg_resources import iter_entry_points
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -15,6 +15,10 @@ from opentelemetry.trace import set_tracer_provider
 from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.sdk.metrics.export import MetricExporter
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+# This is only to avoid extra logging when debugging with ipdb.
+getLogger("parso.python.diff").disabled = True
+getLogger("asyncio").disabled = True
 
 
 # borromed from opentelemetry/sdk/_configuration
@@ -145,7 +149,12 @@ def parse_and_validate_from_config_file(
                 resolver=resolver,
             )
             debug("No validation errors")
-            return Config(parse_config)
+
+            config_object = Config(parse_config)
+            from ipdb import set_trace
+            set_trace()
+
+            return config_object
         except YAMLError as exc:
             error(exc)
         except ValidationError as exc:
