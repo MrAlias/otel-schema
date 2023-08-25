@@ -11,7 +11,9 @@ import otel
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
-    otel.configure(otel.parse_and_validate_from_config_file(sys.argv[1], sys.argv[2]))
+    otel.configure(
+        otel.parse_and_validate_from_config_file(sys.argv[1], sys.argv[2])
+    )
 
     tracer = get_tracer("config-prototype")
     meter = get_meter("config-prototype")
@@ -23,7 +25,6 @@ def main():
             with tracer.start_as_current_span("operation-c"):
                 logging.debug("you should see telemetry after this line")
                 counter.add(1)
-    
 
 
 if __name__ == "__main__":
