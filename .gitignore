@@ -23,3 +23,5 @@ build
 *.iml
 
 **/.venv/
+
+**/__pycache__
